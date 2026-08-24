@@ -13,6 +13,7 @@ import menuRoutes from './modules/menu/menu.routes';
 import inventoryRoutes from './modules/inventory/inventory.routes';
 import recipeRoutes from './modules/recipes/recipe.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
+import orderRoutes from './modules/orders/order.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -41,8 +42,9 @@ export function createApp(): Application {
   app.use('/api/inventory', inventoryRoutes);
   app.use('/api/recipes', recipeRoutes);
   app.use('/api/notifications', notificationRoutes);
+  app.use('/api/orders', orderRoutes);
   // Remaining module routes mounted here incrementally as each is built
-  // app.use('/api/orders', orderRoutes);
+  // app.use('/api/payments', paymentRoutes);
   // ... etc
 
   app.use((req, res) => {
