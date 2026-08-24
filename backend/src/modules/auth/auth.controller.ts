@@ -1,0 +1,53 @@
+import { Request, Response, NextFunction } from 'express';
+import { loginSchema, registerSchema, refreshTokenSchema } from './auth.validation';
+import { registerUser, loginUser, refreshAccessToken } from './auth.service';
+import { sendSuccess } from '../../utils/apiResponse';
+import { logAudit } from '../audit/audit.service';
+import { AuthenticatedRequest } from './auth.middleware';
+
+export async function register(req: Request, res: Response, next: NextFunction) {
+  try {
+    const input = registerSchema.parse(req.body);
+    const user = await registerUser(input);
+
+    await logAudit({
+      userId: (req as AuthenticatedRequest).user?.userId ?? null,
+      action: 'USER_REGISTERED',
+      entityType: 'User',
+      entityId: user.id,
+      metadata: { createdEmail: user.email, createdRole: user.role },
+    });
+
+    sendSuccess(res, 201, { message: 'User registered successfully', data: user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function login(req: Request, res: Response, next: NextFunction) {
+  try {
+    const input = loginSchema.parse(req.body);
+    const result = await loginUser(input);
+
+    await logAudit({
+      userId: result.user.id,
+      action: 'USER_LOGIN',
+      entityType: 'User',
+      entityId: result.user.id,
+    });
+
+    sendSuccess(res, 200, { message: 'Login successful', data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function refresh(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { refreshToken } = refreshTokenSchema.parse(req.body);
+    const result = await refreshAccessToken(refreshToken);
+    sendSuccess(res, 200, { message: 'Token refreshed', data: result });
+  } catch (error) {
+    next(error);
+  }
+}

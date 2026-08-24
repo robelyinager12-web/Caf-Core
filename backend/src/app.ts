@@ -6,6 +6,7 @@ import { env } from './config/env';
 import { errorHandler } from './middlewares/errorHandler';
 import { globalRateLimiter } from './middlewares/rateLimiter';
 import { logger } from './utils/logger';
+import authRoutes from './modules/auth/auth.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -27,8 +28,8 @@ export function createApp(): Application {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Module routes are mounted here incrementally as each module is built
-  // app.use('/api/auth', authRoutes);
+  app.use('/api/auth', authRoutes);
+  // Remaining module routes mounted here incrementally as each is built
   // app.use('/api/users', userRoutes);
   // app.use('/api/menu', menuRoutes);
   // ... etc
