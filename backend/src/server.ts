@@ -1,20 +1,25 @@
+import http from 'http';
 import { createApp } from './app';
 import { env } from './config/env';
 import { connectDatabase, disconnectDatabase } from './config/db';
+import { initSocket } from './config/socket';
 import { logger } from './utils/logger';
 
 async function bootstrap(): Promise<void> {
   await connectDatabase();
 
   const app = createApp();
+  const httpServer = http.createServer(app);
 
-  const server = app.listen(env.port, () => {
+  initSocket(httpServer);
+
+  httpServer.listen(env.port, () => {
     logger.info(`Server running on port ${env.port} [${env.nodeEnv}]`);
   });
 
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received. Shutting down gracefully...`);
-    server.close(async () => {
+    httpServer.close(async () => {
       await disconnectDatabase();
       logger.info('Shutdown complete');
       process.exit(0);
