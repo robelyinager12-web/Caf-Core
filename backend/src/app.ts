@@ -1,0 +1,44 @@
+import express, { Application } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import path from 'path';
+import { env } from './config/env';
+import { errorHandler } from './middlewares/errorHandler';
+import { globalRateLimiter } from './middlewares/rateLimiter';
+import { logger } from './utils/logger';
+
+export function createApp(): Application {
+  const app = express();
+
+  app.use(helmet());
+  app.use(
+    cors({
+      origin: env.clientUrl,
+      credentials: true,
+    })
+  );
+  app.use(express.json({ limit: '2mb' }));
+  app.use(express.urlencoded({ extended: true }));
+  app.use(globalRateLimiter);
+
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Module routes are mounted here incrementally as each module is built
+  // app.use('/api/auth', authRoutes);
+  // app.use('/api/users', userRoutes);
+  // app.use('/api/menu', menuRoutes);
+  // ... etc
+
+  app.use((req, res) => {
+    res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+  });
+
+  app.use(errorHandler);
+
+  logger.info('Express application configured');
+  return app;
+}
