@@ -7,6 +7,7 @@ import { errorHandler } from './middlewares/errorHandler';
 import { globalRateLimiter } from './middlewares/rateLimiter';
 import { logger } from './utils/logger';
 import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/user.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -29,8 +30,8 @@ export function createApp(): Application {
   });
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/users', userRoutes);
   // Remaining module routes mounted here incrementally as each is built
-  // app.use('/api/users', userRoutes);
   // app.use('/api/menu', menuRoutes);
   // ... etc
 
