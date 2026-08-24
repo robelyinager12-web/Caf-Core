@@ -14,6 +14,8 @@ import inventoryRoutes from './modules/inventory/inventory.routes';
 import recipeRoutes from './modules/recipes/recipe.routes';
 import notificationRoutes from './modules/notifications/notification.routes';
 import orderRoutes from './modules/orders/order.routes';
+import paymentRoutes from './modules/payments/payment.routes';
+import staffRoutes from './modules/staff/staff.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -43,9 +45,11 @@ export function createApp(): Application {
   app.use('/api/recipes', recipeRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api/orders', orderRoutes);
+  app.use('/api/payments', paymentRoutes);
+  app.use('/api/staff', staffRoutes);
   // Remaining module routes mounted here incrementally as each is built
-  // app.use('/api/payments', paymentRoutes);
-  // ... etc
+  // app.use('/api/reports', reportRoutes);
+  // app.use('/api/audit', auditRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
