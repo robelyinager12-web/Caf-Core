@@ -6,6 +6,7 @@ import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { MenuManagementPage } from '../pages/menu/MenuManagementPage';
 import { NewOrderPage } from '../pages/orders/NewOrderPage';
 import { KitchenDisplayPage } from '../pages/kitchen/KitchenDisplayPage';
+import { InventoryPage } from '../pages/inventory/InventoryPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export function AppRouter() {
@@ -27,8 +28,9 @@ export function AppRouter() {
 
             <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'KITCHEN']} />}>
               <Route path="/kitchen" element={<KitchenDisplayPage />} />
+              <Route path="/inventory" element={<InventoryPage />} />
             </Route>
-            {/* Order History, Inventory, Staff, Reports pages
+            {/* Order History, Staff, Reports pages
                 are added in the following frontend steps */}
           </Route>
         </Route>
