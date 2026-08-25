@@ -10,6 +10,7 @@ import { KitchenDisplayPage } from '../pages/kitchen/KitchenDisplayPage';
 import { InventoryPage } from '../pages/inventory/InventoryPage';
 import { StaffManagementPage } from '../pages/staff/StaffManagementPage';
 import { ReportsPage } from '../pages/reports/ReportsPage';
+import { AuditLogPage } from '../pages/audit/AuditLogPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export function AppRouter() {
@@ -38,6 +39,10 @@ export function AppRouter() {
               <Route path="/orders/history" element={<OrderHistoryPage />} />
               <Route path="/staff" element={<StaffManagementPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+              <Route path="/audit-log" element={<AuditLogPage />} />
             </Route>
           </Route>
         </Route>

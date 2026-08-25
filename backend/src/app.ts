@@ -17,6 +17,7 @@ import orderRoutes from './modules/orders/order.routes';
 import paymentRoutes from './modules/payments/payment.routes';
 import staffRoutes from './modules/staff/staff.routes';
 import reportRoutes from './modules/reports/report.routes';
+import auditRoutes from './modules/audit/audit.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -49,6 +50,7 @@ export function createApp(): Application {
   app.use('/api/payments', paymentRoutes);
   app.use('/api/staff', staffRoutes);
   app.use('/api/reports', reportRoutes);
+  app.use('/api/audit', auditRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
