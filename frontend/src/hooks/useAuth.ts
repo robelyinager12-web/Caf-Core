@@ -1,24 +1,23 @@
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { login as loginRequest } from '../services/authService';
+import { login } from '../services/authService';
 import { useAuthStore } from '../store/authStore';
 
 export function useLogin() {
-  const setSession = useAuthStore((s) => s.setSession);
+  const setAuth = useAuthStore((state) => state.setAuth);
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      loginRequest(email, password),
+    mutationFn: login,
     onSuccess: (data) => {
-      setSession(data.user, data.accessToken, data.refreshToken);
+      setAuth(data.user, data.accessToken, data.refreshToken);
       navigate('/dashboard');
     },
   });
 }
 
 export function useLogout() {
-  const logout = useAuthStore((s) => s.logout);
+  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
 
   return () => {

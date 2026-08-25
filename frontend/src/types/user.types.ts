@@ -1,22 +1,17 @@
-export type UserRole = 'ADMIN' | 'MANAGER' | 'CASHIER' | 'KITCHEN';
+export type Role = 'ADMIN' | 'MANAGER' | 'CASHIER' | 'KITCHEN';
 
 export interface User {
   id: string;
   fullName: string;
   email: string;
-  role: UserRole;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  role: Role;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface LoginResponse {
-  user: {
-    id: string;
-    fullName: string;
-    email: string;
-    role: UserRole;
-  };
+export interface AuthResponse {
+  user: User;
   accessToken: string;
   refreshToken: string;
 }

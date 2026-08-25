@@ -1,51 +1,32 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-export type UserRole = 'ADMIN' | 'MANAGER' | 'CASHIER' | 'KITCHEN';
-
-export interface AuthUser {
-  id: string;
-  fullName: string;
-  email: string;
-  role: UserRole;
-}
+import { User } from '../types/user.types';
 
 interface AuthState {
-  user: AuthUser | null;
+  user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
-  setSession: (user: AuthUser, accessToken: string, refreshToken: string) => void;
+  isAuthenticated: boolean;
+  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   setAccessToken: (accessToken: string) => void;
   logout: () => void;
-  hasRole: (...roles: UserRole[]) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
       accessToken: null,
       refreshToken: null,
-
-      setSession: (user, accessToken, refreshToken) =>
-        set({ user, accessToken, refreshToken }),
-
+      isAuthenticated: false,
+      setAuth: (user, accessToken, refreshToken) =>
+        set({ user, accessToken, refreshToken, isAuthenticated: true }),
       setAccessToken: (accessToken) => set({ accessToken }),
-
-      logout: () => set({ user: null, accessToken: null, refreshToken: null }),
-
-      hasRole: (...roles) => {
-        const currentRole = get().user?.role;
-        return currentRole ? roles.includes(currentRole) : false;
-      },
+      logout: () =>
+        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
     }),
     {
-      name: 'cafeteria-auth',
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-      }),
+      name: 'cafeteria-auth-storage',
     }
   )
 );

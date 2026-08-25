@@ -1,14 +1,15 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore, UserRole } from '../../store/authStore';
+import { useAuthStore } from '../../store/authStore';
+import { Role } from '../../types/user.types';
 
 interface ProtectedRouteProps {
-  allowedRoles?: UserRole[];
+  allowedRoles?: Role[];
 }
 
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { user, accessToken } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
-  if (!accessToken || !user) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
