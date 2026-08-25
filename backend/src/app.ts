@@ -1,6 +1,7 @@
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import path from 'path';
 import { env } from './config/env';
 import { errorHandler } from './middlewares/errorHandler';
@@ -23,6 +24,7 @@ export function createApp(): Application {
   const app = express();
 
   app.use(helmet());
+  app.use(compression());
   app.use(
     cors({
       origin: env.clientUrl,
@@ -33,7 +35,7 @@ export function createApp(): Application {
   app.use(express.urlencoded({ extended: true }));
   app.use(globalRateLimiter);
 
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), { maxAge: '7d' }));
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -25,6 +25,8 @@ export function MenuItemCard({
           <img
             src={`${import.meta.env.VITE_SOCKET_URL}${item.imageUrl}`}
             alt={item.name}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
