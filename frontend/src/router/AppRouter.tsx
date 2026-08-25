@@ -5,8 +5,10 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { MenuManagementPage } from '../pages/menu/MenuManagementPage';
 import { NewOrderPage } from '../pages/orders/NewOrderPage';
+import { OrderHistoryPage } from '../pages/orders/OrderHistoryPage';
 import { KitchenDisplayPage } from '../pages/kitchen/KitchenDisplayPage';
 import { InventoryPage } from '../pages/inventory/InventoryPage';
+import { StaffManagementPage } from '../pages/staff/StaffManagementPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export function AppRouter() {
@@ -30,8 +32,12 @@ export function AppRouter() {
               <Route path="/kitchen" element={<KitchenDisplayPage />} />
               <Route path="/inventory" element={<InventoryPage />} />
             </Route>
-            {/* Order History, Staff, Reports pages
-                are added in the following frontend steps */}
+
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
+              <Route path="/orders/history" element={<OrderHistoryPage />} />
+              <Route path="/staff" element={<StaffManagementPage />} />
+            </Route>
+            {/* Reports page is added in the next frontend step */}
           </Route>
         </Route>
 
