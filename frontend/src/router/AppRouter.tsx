@@ -9,6 +9,7 @@ import { OrderHistoryPage } from '../pages/orders/OrderHistoryPage';
 import { KitchenDisplayPage } from '../pages/kitchen/KitchenDisplayPage';
 import { InventoryPage } from '../pages/inventory/InventoryPage';
 import { StaffManagementPage } from '../pages/staff/StaffManagementPage';
+import { ReportsPage } from '../pages/reports/ReportsPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export function AppRouter() {
@@ -36,8 +37,8 @@ export function AppRouter() {
             <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
               <Route path="/orders/history" element={<OrderHistoryPage />} />
               <Route path="/staff" element={<StaffManagementPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
             </Route>
-            {/* Reports page is added in the next frontend step */}
           </Route>
         </Route>
 
