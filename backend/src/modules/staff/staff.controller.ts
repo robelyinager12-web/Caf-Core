@@ -13,7 +13,6 @@ export async function postClockIn(req: AuthenticatedRequest, res: Response, next
     const input = clockInSchema.parse(req.body);
     const targetUserId = input.userId ?? req.user.userId;
 
-    // Only Admin/Manager may clock in on behalf of someone else
     if (input.userId && input.userId !== req.user.userId) {
       if (req.user.role !== 'ADMIN' && req.user.role !== 'MANAGER') {
         throw new AppError('You do not have permission to clock in another user', 403);
@@ -66,8 +65,11 @@ export async function postClockOut(req: AuthenticatedRequest, res: Response, nex
 
 export async function getShifts(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   try {
+    if (!req.user) throw new AppError('Authentication required', 401);
+
     const query = listShiftsQuerySchema.parse(req.query);
-    const result = await listShifts(query);
+    const result = await listShifts(query, req.user.userId, req.user.role);
+
     sendSuccess(res, 200, {
       message: 'Shifts retrieved successfully',
       data: result.shifts,

@@ -1,7 +1,7 @@
 import { prisma } from '../../config/db';
 import { AppError } from '../../middlewares/errorHandler';
 import { ListShiftsQuery } from './staff.validation';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 
 export async function clockIn(targetUserId: string) {
   const user = await prisma.user.findUnique({ where: { id: targetUserId } });
@@ -40,13 +40,24 @@ export async function clockOut(targetUserId: string) {
   });
 }
 
-export async function listShifts(query: ListShiftsQuery) {
+export async function listShifts(
+  query: ListShiftsQuery,
+  callerId: string,
+  callerRole: Role
+) {
   const page = query.page ?? 1;
   const limit = query.limit ?? 20;
   const skip = (page - 1) * limit;
 
+  const isPrivileged = callerRole === 'ADMIN' || callerRole === 'MANAGER';
+
+  // A non-privileged caller may only ever see their own shifts, regardless
+  // of what userId they pass (or omit) in the query — this is enforced here
+  // rather than trusted from the request.
+  const effectiveUserId = isPrivileged ? query.userId : callerId;
+
   const where: Prisma.StaffShiftWhereInput = {
-    ...(query.userId ? { userId: query.userId } : {}),
+    ...(effectiveUserId ? { userId: effectiveUserId } : {}),
     ...(query.activeOnly ? { shiftEnd: null } : {}),
     ...(query.dateFrom || query.dateTo
       ? {

@@ -15,6 +15,7 @@ import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
 import { useLogout } from '../hooks/useAuth';
 import { Role } from '../types/user.types';
+import { ShiftClockWidget } from '../components/staff/ShiftClockWidget';
 
 interface NavItem {
   to: string;
@@ -78,10 +79,7 @@ export function MainLayout() {
       </aside>
 
       {isSidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/30 lg:hidden"
-          onClick={closeSidebar}
-        />
+        <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={closeSidebar} />
       )}
 
       <div className="flex flex-1 flex-col lg:pl-64">
@@ -93,6 +91,8 @@ export function MainLayout() {
           <div className="flex-1" />
 
           <div className="flex items-center gap-4">
+            <ShiftClockWidget />
+
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
               <p className="text-xs text-gray-500">{user?.role}</p>

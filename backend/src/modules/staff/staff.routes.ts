@@ -9,6 +9,11 @@ router.use(authenticate);
 router.post('/clock-in', postClockIn);
 router.post('/clock-out', postClockOut);
 router.get('/active', authorize('ADMIN', 'MANAGER'), getActiveStaff);
-router.get('/shifts', authorize('ADMIN', 'MANAGER'), getShifts);
+
+// Any authenticated user may view shifts — but only their own; Admin/Manager
+// may additionally filter by any userId. The narrowing happens in the
+// service layer below, not here, since it depends on comparing the query's
+// userId against the caller's identity.
+router.get('/shifts', getShifts);
 
 export default router;

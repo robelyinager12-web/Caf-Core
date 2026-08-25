@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { api } from '../../services/api';
 import { StaffTable } from '../../components/staff/StaffTable';
 import { StaffForm } from '../../components/staff/StaffForm';
+import { ActiveStaffPanel } from '../../components/staff/ActiveStaffPanel';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Loader } from '../../components/common/Loader';
@@ -104,6 +105,8 @@ export function StaffManagementPage() {
           Add Staff
         </Button>
       </div>
+
+      <ActiveStaffPanel />
 
       <StaffTable
         users={usersQuery.data ?? []}
