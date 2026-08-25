@@ -6,6 +6,7 @@ import path from 'path';
 import { env } from './config/env';
 import { errorHandler } from './middlewares/errorHandler';
 import { globalRateLimiter } from './middlewares/rateLimiter';
+import { sanitizeInput } from './middlewares/sanitizeInput';
 import { logger } from './utils/logger';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/user.routes';
@@ -23,16 +24,35 @@ import auditRoutes from './modules/audit/audit.routes';
 export function createApp(): Application {
   const app = express();
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:'],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          connectSrc: ["'self'", env.clientUrl],
+        },
+      },
+      crossOriginResourcePolicy: { policy: 'cross-origin' }, // required so
+      // uploaded menu-item images can be embedded by the frontend origin
+    })
+  );
   app.use(compression());
   app.use(
     cors({
       origin: env.clientUrl,
       credentials: true,
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'], // explicit allow-list —
+      // no PUT/OPTIONS-adjacent surprises; matches exactly what this API
+      // actually exposes across every module built in Phase 6
+      allowedHeaders: ['Content-Type', 'Authorization'],
     })
   );
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
+  app.use(sanitizeInput);
   app.use(globalRateLimiter);
 
   app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), { maxAge: '7d' }));

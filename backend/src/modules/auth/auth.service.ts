@@ -6,7 +6,16 @@ import { AppError } from '../../middlewares/errorHandler';
 import { LoginInput, RegisterInput } from './auth.validation';
 import { Role } from '@prisma/client';
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12; // raised from 10 — still well within acceptable
+// login-latency budget (~250-300ms on typical hardware) while meaningfully
+// raising the cost of an offline brute-force attempt if the hash table
+// were ever exfiltrated
+
+// A pre-computed hash of a value nobody will ever actually enter, used
+// purely to burn the same bcrypt.compare() time when a user doesn't exist —
+// otherwise "unknown email" responds faster than "wrong password", which
+// leaks which emails are registered via a timing side-channel.
+const DUMMY_HASH = '$2b$12$CwTycUXWue0Thq9StjUM0uJ8Rri8ByfSA0AhVvTAyOJb0dxfmDcXW';
 
 interface TokenPayload {
   userId: string;
@@ -56,12 +65,14 @@ export async function registerUser(input: RegisterInput) {
 export async function loginUser(input: LoginInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
 
-  if (!user || !user.isActive) {
-    throw new AppError('Invalid email or password', 401);
-  }
+  // Always run bcrypt.compare — against the real hash if the user exists,
+  // or the dummy hash if not — so both branches take comparable time and
+  // an attacker can't distinguish "no such user" from "wrong password"
+  // by measuring response latency.
+  const hashToCompare = user?.passwordHash ?? DUMMY_HASH;
+  const passwordMatches = await bcrypt.compare(input.password, hashToCompare);
 
-  const passwordMatches = await bcrypt.compare(input.password, user.passwordHash);
-  if (!passwordMatches) {
+  if (!user || !user.isActive || !passwordMatches) {
     throw new AppError('Invalid email or password', 401);
   }
 

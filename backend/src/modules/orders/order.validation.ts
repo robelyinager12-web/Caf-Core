@@ -2,13 +2,16 @@ import { z } from 'zod';
 
 export const orderItemSchema = z.object({
   menuItemId: z.string().uuid(),
-  quantity: z.number().int().positive('Quantity must be at least 1'),
+  quantity: z.number().int().positive('Quantity must be at least 1').max(50, 'Quantity per item cannot exceed 50'),
 });
 
 export const createOrderSchema = z.object({
   orderType: z.enum(['DINE_IN', 'TAKEAWAY']),
   tableOrToken: z.string().max(20).optional(),
-  items: z.array(orderItemSchema).min(1, 'Order must contain at least one item'),
+  items: z
+    .array(orderItemSchema)
+    .min(1, 'Order must contain at least one item')
+    .max(50, 'Order cannot contain more than 50 distinct line items'),
 });
 
 export const updateOrderStatusSchema = z.object({

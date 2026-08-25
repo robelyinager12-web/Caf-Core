@@ -25,7 +25,13 @@ export function authenticate(
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, env.jwt.accessSecret) as {
+    // Explicitly pinning the accepted algorithm closes a known JWT library
+    // class of vulnerability where a token crafted with alg: "none" or a
+    // mismatched algorithm could otherwise be accepted depending on library
+    // version/config. jsonwebtoken defends against this by default, but
+    // pinning it here removes any doubt and any risk from a future
+    // dependency version change silently loosening that default.
+    const decoded = jwt.verify(token, env.jwt.accessSecret, { algorithms: ['HS256'] }) as {
       userId: string;
       role: Role;
     };
