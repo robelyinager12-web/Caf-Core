@@ -1,5 +1,7 @@
 export type OrderStatus = 'PENDING' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED';
 export type OrderType = 'DINE_IN' | 'TAKEAWAY';
+export type PaymentMethod = 'CASH' | 'CARD' | 'ONLINE';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'REFUNDED';
 
 export interface OrderItem {
   id: string;
@@ -7,6 +9,16 @@ export interface OrderItem {
   menuItem: { id: string; name: string; imageUrl?: string };
   quantity: number;
   unitPrice: number;
+}
+
+export interface Payment {
+  id: string;
+  orderId: string;
+  method: PaymentMethod;
+  amount: number;
+  status: PaymentStatus;
+  processedBy: { id: string; fullName: string };
+  createdAt: string;
 }
 
 export interface Order {
@@ -20,6 +32,7 @@ export interface Order {
   subtotal: number;
   total: number;
   items: OrderItem[];
+  payment?: Payment | null;
   createdAt: string;
   updatedAt: string;
 }
