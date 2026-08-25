@@ -4,6 +4,7 @@ import { MainLayout } from '../layouts/MainLayout';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 import { MenuManagementPage } from '../pages/menu/MenuManagementPage';
+import { NewOrderPage } from '../pages/orders/NewOrderPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 export function AppRouter() {
@@ -18,7 +19,12 @@ export function AppRouter() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/menu" element={<MenuManagementPage />} />
-            {/* Orders, Kitchen, Inventory, Staff, Reports pages
+            <Route
+              element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'CASHIER']} />}
+            >
+              <Route path="/orders/new" element={<NewOrderPage />} />
+            </Route>
+            {/* Order History, Kitchen, Inventory, Staff, Reports pages
                 are added in the following frontend steps */}
           </Route>
         </Route>
