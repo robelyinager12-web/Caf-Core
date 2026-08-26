@@ -1,0 +1,12 @@
+# Environment
+.env
+*.env
+
+# Dependencies
+node_modules/
+
+# Generated uploads
+backend/uploads/
+
+# Logs
+*.log
