@@ -13,6 +13,11 @@ interface RegisterPayload {
   role: Role;
 }
 
+interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await api.post('/auth/login', payload);
   return data.data;
@@ -21,4 +26,8 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
 export async function registerStaff(payload: RegisterPayload) {
   const { data } = await api.post('/auth/register', payload);
   return data.data;
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<void> {
+  await api.post('/auth/change-password', payload);
 }

@@ -5,13 +5,6 @@ import { MainLayout } from '../layouts/MainLayout';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loader } from '../components/common/Loader';
-
-// Every page except Login and Dashboard is lazy-loaded — these are the two
-// screens hit on every session (Login before auth, Dashboard immediately
-// after), so they stay in the main bundle. Everything else (Menu, Orders,
-// Kitchen, Inventory, Staff, Reports, Audit Log) is only fetched when a
-// user with the right role actually navigates there, shrinking the initial
-// bundle a Cashier or Kitchen-role user downloads on login.
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 
 const MenuManagementPage = lazy(() =>
@@ -38,6 +31,9 @@ const ReportsPage = lazy(() =>
 const AuditLogPage = lazy(() =>
   import('../pages/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage }))
 );
+const SettingsPage = lazy(() =>
+  import('../pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+);
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<Loader label="Loading page..." />}>{children}</Suspense>;
@@ -59,6 +55,14 @@ export function AppRouter() {
               element={
                 <LazyPage>
                   <MenuManagementPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <LazyPage>
+                  <SettingsPage />
                 </LazyPage>
               }
             />

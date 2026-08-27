@@ -8,6 +8,7 @@ import {
   Users,
   BarChart3,
   ShieldAlert,
+  Settings as SettingsIcon,
   LogOut,
   Menu as MenuIcon,
 } from 'lucide-react';
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/staff', label: 'Staff', icon: Users, roles: ['ADMIN', 'MANAGER'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
   { to: '/audit-log', label: 'Audit Log', icon: ShieldAlert, roles: ['ADMIN'] },
+  { to: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 export function MainLayout() {

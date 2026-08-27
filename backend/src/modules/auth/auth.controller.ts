@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { loginSchema, registerSchema, refreshTokenSchema } from './auth.validation';
-import { registerUser, loginUser, refreshAccessToken } from './auth.service';
+import { loginSchema, registerSchema, refreshTokenSchema, changePasswordSchema } from './auth.validation';
+import { registerUser, loginUser, refreshAccessToken, changePassword } from './auth.service';
 import { sendSuccess } from '../../utils/apiResponse';
 import { logAudit } from '../audit/audit.service';
 import { AuthenticatedRequest } from './auth.middleware';
+import { AppError } from '../../middlewares/errorHandler';
 
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {
@@ -47,6 +48,26 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
     const { refreshToken } = refreshTokenSchema.parse(req.body);
     const result = await refreshAccessToken(refreshToken);
     sendSuccess(res, 200, { message: 'Token refreshed', data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function postChangePassword(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) throw new AppError('Authentication required', 401);
+
+    const input = changePasswordSchema.parse(req.body);
+    await changePassword(req.user.userId, input);
+
+    await logAudit({
+      userId: req.user.userId,
+      action: 'PASSWORD_CHANGED',
+      entityType: 'User',
+      entityId: req.user.userId,
+    });
+
+    sendSuccess(res, 200, { message: 'Password changed successfully' });
   } catch (error) {
     next(error);
   }

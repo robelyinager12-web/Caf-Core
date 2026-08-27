@@ -3,19 +3,20 @@ import { useCallback } from 'react';
 import { getNotifications } from '../services/notificationService';
 import { useSocket } from './useSocket';
 import { useToastStore } from '../components/common/Toast';
+import { usePreferencesStore } from '../store/preferencesStore';
 import { AppNotification } from '../types/notification.types';
 
 /**
  * Fetches recent notifications and keeps them live-updated via the
- * 'notification:new' Socket.IO event (emitted by the backend's
- * notification.service.ts on every createNotification call — low stock
- * alerts, new orders). New events are prepended directly into the React
- * Query cache rather than triggering a refetch, so the bell updates
- * instantly without an extra round trip.
+ * 'notification:new' Socket.IO event. New events are prepended directly
+ * into the React Query cache rather than triggering a refetch, so the bell
+ * updates instantly without an extra round trip. Whether a toast pop-up
+ * also fires is gated by the user's stored preference (Settings page).
  */
 export function useNotifications() {
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
+  const toastNotificationsEnabled = usePreferencesStore((state) => state.toastNotificationsEnabled);
 
   const query = useQuery({
     queryKey: ['notifications'],
@@ -27,9 +28,11 @@ export function useNotifications() {
       queryClient.setQueryData<AppNotification[]>(['notifications'], (prev) =>
         prev ? [notification, ...prev] : [notification]
       );
-      showToast(notification.message);
+      if (toastNotificationsEnabled) {
+        showToast(notification.message);
+      }
     },
-    [queryClient, showToast]
+    [queryClient, showToast, toastNotificationsEnabled]
   );
 
   useSocket({ 'notification:new': handleNewNotification });
