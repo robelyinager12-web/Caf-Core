@@ -17,6 +17,7 @@ import { useUiStore } from '../store/uiStore';
 import { useLogout } from '../hooks/useAuth';
 import { Role } from '../types/user.types';
 import { ShiftClockWidget } from '../components/staff/ShiftClockWidget';
+import { NotificationBell } from '../components/notifications/NotificationBell';
 
 interface NavItem {
   to: string;
@@ -92,7 +93,8 @@ export function MainLayout() {
 
           <div className="flex-1" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <NotificationBell />
             <ShiftClockWidget />
 
             <div className="text-right">
