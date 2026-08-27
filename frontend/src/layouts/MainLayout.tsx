@@ -18,6 +18,7 @@ import { useLogout } from '../hooks/useAuth';
 import { Role } from '../types/user.types';
 import { ShiftClockWidget } from '../components/staff/ShiftClockWidget';
 import { NotificationBell } from '../components/notifications/NotificationBell';
+import { ThemeToggle } from '../components/common/ThemeToggle';
 
 interface NavItem {
   to: string;
@@ -48,14 +49,14 @@ export function MainLayout() {
   const visibleItems = NAV_ITEMS.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-sm ring-1 ring-gray-200 transition-transform lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-30 w-64 transform bg-white shadow-sm ring-1 ring-gray-200 transition-transform dark:bg-gray-900 dark:ring-gray-800 lg:static lg:translate-x-0',
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center border-b border-gray-100 px-6">
+        <div className="flex h-16 items-center border-b border-gray-100 px-6 dark:border-gray-800">
           <h1 className="text-lg font-bold text-primary-600">CaféCore</h1>
         </div>
 
@@ -69,8 +70,8 @@ export function MainLayout() {
                 clsx(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-500'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 )
               }
             >
@@ -86,24 +87,25 @@ export function MainLayout() {
       )}
 
       <div className="flex flex-1 flex-col lg:pl-64">
-        <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-8">
-          <button onClick={toggleSidebar} className="lg:hidden">
-            <MenuIcon className="h-5 w-5 text-gray-600" />
+        <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900 lg:px-8">
+          <button onClick={toggleSidebar} className="text-gray-600 dark:text-gray-300 lg:hidden">
+            <MenuIcon className="h-5 w-5" />
           </button>
 
           <div className="flex-1" />
 
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <NotificationBell />
             <ShiftClockWidget />
 
             <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{user?.fullName}</p>
-              <p className="text-xs text-gray-500">{user?.role}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user?.fullName}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.role}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
+              className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <LogOut className="h-4 w-4" />
             </button>

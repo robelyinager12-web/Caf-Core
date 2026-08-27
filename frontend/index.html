@@ -5,6 +5,25 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CaféCore — Cafeteria Management System</title>
+    <script>
+      // Applied before React mounts, reading directly from localStorage —
+      // avoids a flash of light mode on page load for users who have dark
+      // mode saved, since zustand's persist middleware only rehydrates
+      // after the JS bundle runs and React has already painted once.
+      (function () {
+        try {
+          var stored = localStorage.getItem('cafeteria-theme-storage');
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (parsed.state && parsed.state.theme === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
+          }
+        } catch (e) {
+          // localStorage unavailable or malformed — default to light, no-op
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
