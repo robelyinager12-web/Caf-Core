@@ -52,9 +52,14 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
   }
 
   const total = cart.reduce((sum, l) => sum + l.price * l.quantity, 0);
+  const cartIsEmpty = cart.length === 0;
 
   function handleSubmit() {
-    if (cart.length === 0) return;
+    // Hard guard here in addition to the disabled button prop below —
+    // never allow a submit call to fire with zero items, regardless of
+    // how the click was triggered.
+    if (cartIsEmpty || isSubmitting) return;
+
     onSubmit({
       orderType,
       tableOrToken: tableOrToken || undefined,
@@ -73,21 +78,37 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
           onSelect={setActiveCategoryId}
         />
 
+        {visibleItems.length === 0 && (
+          <p className="rounded-lg bg-gray-50 py-8 text-center text-sm text-gray-400">
+            No available items in this category.
+          </p>
+        )}
+
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {visibleItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => item.isAvailable && addToCart(item)}
-              disabled={!item.isAvailable}
-              className="flex flex-col items-start gap-1 rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-gray-200 transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span className="text-sm font-medium text-gray-900">{item.name}</span>
-              <span className="text-sm font-semibold text-primary-600">
-                {formatCurrency(item.price)}
-              </span>
-              {!item.isAvailable && <span className="text-xs text-danger">Unavailable</span>}
-            </button>
-          ))}
+          {visibleItems.map((item) => {
+            // The API's GET /menu?isAvailable=true already filters to
+            // available items only — treat isAvailable as true here unless
+            // explicitly false, so a missing/undefined field (which would
+            // otherwise silently block every add-to-cart click) never
+            // disables an item that's actually orderable.
+            const isOrderable = item.isAvailable !== false;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => isOrderable && addToCart(item)}
+                disabled={!isOrderable}
+                className="flex flex-col items-start gap-1 rounded-xl bg-white p-3 text-left shadow-sm ring-1 ring-gray-200 transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                <span className="text-sm font-semibold text-primary-600">
+                  {formatCurrency(item.price)}
+                </span>
+                {!isOrderable && <span className="text-xs text-danger">Unavailable</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -99,6 +120,7 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
 
         <div className="flex gap-2">
           <button
+            type="button"
             onClick={() => setOrderType('TAKEAWAY')}
             className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium ${
               orderType === 'TAKEAWAY'
@@ -109,6 +131,7 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
             Takeaway
           </button>
           <button
+            type="button"
             onClick={() => setOrderType('DINE_IN')}
             className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium ${
               orderType === 'DINE_IN' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-600'
@@ -126,8 +149,10 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
         />
 
         <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-          {cart.length === 0 ? (
-            <p className="py-6 text-center text-xs text-gray-400">No items added yet</p>
+          {cartIsEmpty ? (
+            <p className="py-6 text-center text-xs text-gray-400">
+              No items added yet — tap a menu item on the left to add it.
+            </p>
           ) : (
             cart.map((line) => (
               <div key={line.menuItemId} className="flex items-center justify-between gap-2 text-sm">
@@ -137,6 +162,7 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
                 </div>
                 <div className="flex items-center gap-1">
                   <button
+                    type="button"
                     onClick={() => updateQuantity(line.menuItemId, -1)}
                     className="rounded bg-gray-100 p-1 hover:bg-gray-200"
                   >
@@ -144,12 +170,14 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
                   </button>
                   <span className="w-5 text-center text-xs font-medium">{line.quantity}</span>
                   <button
+                    type="button"
                     onClick={() => updateQuantity(line.menuItemId, 1)}
                     className="rounded bg-gray-100 p-1 hover:bg-gray-200"
                   >
                     <Plus className="h-3 w-3" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => removeLine(line.menuItemId)}
                     className="ml-1 rounded bg-danger/10 p-1 text-danger hover:bg-danger/20"
                   >
@@ -167,8 +195,9 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
             <span className="text-primary-600">{formatCurrency(total)}</span>
           </div>
           <Button
+            type="button"
             onClick={handleSubmit}
-            disabled={cart.length === 0}
+            disabled={cartIsEmpty}
             isLoading={isSubmitting}
             className="w-full"
           >
