@@ -2,6 +2,12 @@ import { prisma } from '../../config/db';
 import { AppError } from '../../middlewares/errorHandler';
 import { DateRangeInput, TopItemsQuery } from './report.validation';
 
+interface DailyBreakdownRow {
+  date: string;
+  revenue: number;
+  orders: bigint;
+}
+
 function parseAndValidateRange(dateFrom: string, dateTo: string) {
   const from = new Date(dateFrom);
   const to = new Date(dateTo);
@@ -21,12 +27,10 @@ function parseAndValidateRange(dateFrom: string, dateTo: string) {
 export async function getSalesSummary(input: DateRangeInput) {
   const { from, to } = parseAndValidateRange(input.dateFrom, input.dateTo);
 
-  // Moved from in-memory JS reduce (Phase 6 Step 10) to a database-level
-  // GROUP BY — the previous version pulled every completed order row into
-  // Node and aggregated in JS, which doesn't scale past a few thousand rows.
-  const dailyBreakdown = await prisma.$queryRaw
-    { date: string; revenue: number; orders: bigint }[]
-  >`
+  // Cast after the call rather than using $queryRaw<T>`...` — a multi-line
+  // generic type argument directly before a tagged template literal is
+  // parsed unreliably by some TypeScript/ts-node configurations.
+  const rawResult = await prisma.$queryRaw`
     SELECT
       TO_CHAR("created_at", 'YYYY-MM-DD') AS date,
       SUM("total")::float AS revenue,
@@ -37,6 +41,7 @@ export async function getSalesSummary(input: DateRangeInput) {
     GROUP BY date
     ORDER BY date ASC
   `;
+  const dailyBreakdown = rawResult as DailyBreakdownRow[];
 
   const totals = await prisma.order.aggregate({
     where: { status: 'COMPLETED', createdAt: { gte: from, lte: to } },
@@ -66,8 +71,6 @@ export async function getTopSellingItems(query: TopItemsQuery) {
   const { from, to } = parseAndValidateRange(query.dateFrom, query.dateTo);
   const limit = query.limit ?? 10;
 
-  // Grouped at the database level via Prisma's groupBy instead of fetching
-  // every order_item row and reducing in memory.
   const grouped = await prisma.orderItem.groupBy({
     by: ['menuItemId'],
     where: { order: { status: 'COMPLETED', createdAt: { gte: from, lte: to } } },
@@ -95,8 +98,64 @@ export async function getTopSellingItems(query: TopItemsQuery) {
   });
 }
 
-// getInventoryUsageReport and getStockAdjustmentAuditReport remain
-// unchanged from Phase 6 Step 10 — their result sets are inherently bounded
-// by ingredient count and manual-adjustment frequency respectively, which
-// stay small even at scale, so in-memory aggregation there is not a
-// performance concern worth the added complexity of a raw SQL rewrite.
+export async function getInventoryUsageReport(input: DateRangeInput) {
+  const { from, to } = parseAndValidateRange(input.dateFrom, input.dateTo);
+
+  const orderItems = await prisma.orderItem.findMany({
+    where: {
+      order: {
+        status: 'COMPLETED',
+        createdAt: { gte: from, lte: to },
+      },
+    },
+    include: {
+      menuItem: {
+        include: {
+          recipes: { include: { ingredient: { select: { id: true, name: true, unit: true } } } },
+        },
+      },
+    },
+  });
+
+  const usage = new Map<string, { ingredientId: string; name: string; unit: string; quantityUsed: number }>();
+
+  for (const orderItem of orderItems) {
+    for (const recipe of orderItem.menuItem.recipes) {
+      const totalUsed = recipe.quantityRequired.toNumber() * orderItem.quantity;
+      const existing = usage.get(recipe.ingredientId);
+
+      if (existing) {
+        existing.quantityUsed += totalUsed;
+      } else {
+        usage.set(recipe.ingredientId, {
+          ingredientId: recipe.ingredientId,
+          name: recipe.ingredient.name,
+          unit: recipe.ingredient.unit,
+          quantityUsed: totalUsed,
+        });
+      }
+    }
+  }
+
+  return Array.from(usage.values()).sort((a, b) => b.quantityUsed - a.quantityUsed);
+}
+
+export async function getStockAdjustmentAuditReport(input: DateRangeInput) {
+  const { from, to } = parseAndValidateRange(input.dateFrom, input.dateTo);
+
+  const adjustments = await prisma.auditLog.findMany({
+    where: {
+      action: 'STOCK_ADJUSTED',
+      createdAt: { gte: from, lte: to },
+    },
+    include: { user: { select: { id: true, fullName: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  return adjustments.map((log) => ({
+    id: log.id,
+    performedBy: log.user?.fullName ?? 'Unknown',
+    metadata: log.metadata,
+    createdAt: log.createdAt,
+  }));
+}
