@@ -54,18 +54,29 @@ async function main() {
     create: { ingredientId: milk.id, quantityInStock: 10000, lowStockThreshold: 1000 },
   });
 
-  const latte = await prisma.menuItem.upsert({
-    where: { id: 'seed-latte-item' },
-    update: {},
-    create: {
-      id: 'seed-latte-item',
-      categoryId: beverageCategory.id,
-      name: 'Cafe Latte',
-      description: 'Espresso with steamed milk',
-      price: 3.5,
-      isAvailable: true,
-    },
+  // Previously this hardcoded id: 'seed-latte-item', which produced a
+  // non-UUID primary key — the real order-creation endpoint validates
+  // menuItemId as a UUID (Phase 6 Step 7 / Phase 10), so any order placed
+  // for that seeded item was rejected with a 422. Letting Prisma generate
+  // a proper UUID here (its @default(uuid()) on the model) fixes that.
+  // Since there's no natural unique field to upsert on other than id/name,
+  // and name isn't unique on MenuItem, we look it up first and only create
+  // if it doesn't already exist — safe to re-run without duplicating.
+  let latte = await prisma.menuItem.findFirst({
+    where: { name: 'Cafe Latte', categoryId: beverageCategory.id },
   });
+
+  if (!latte) {
+    latte = await prisma.menuItem.create({
+      data: {
+        categoryId: beverageCategory.id,
+        name: 'Cafe Latte',
+        description: 'Espresso with steamed milk',
+        price: 3.5,
+        isAvailable: true,
+      },
+    });
+  }
 
   await prisma.recipe.upsert({
     where: { uq_recipe_item_ingredient: { menuItemId: latte.id, ingredientId: coffeeBeans.id } },
@@ -81,6 +92,7 @@ async function main() {
 
   console.log('Seed complete. Admin login: admin@cafeteria.local / Admin@12345');
   console.log(`Created admin user id: ${admin.id}`);
+  console.log(`Latte menu item id: ${latte.id}`);
 }
 
 main()
