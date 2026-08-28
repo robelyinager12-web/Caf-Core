@@ -17,7 +17,7 @@ export async function logAudit(input: AuditInput): Promise<void> {
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId ?? null,
-      metadata: input.metadata ?? undefined,
+      metadata: input.metadata as Prisma.InputJsonValue | undefined,
     },
   });
 }
