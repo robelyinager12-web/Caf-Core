@@ -61,11 +61,17 @@ export function MainLayout() {
   const visibleItems = NAV_ITEMS.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
   return (
-    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      {/* Sidebar is ALWAYS position: fixed, at every breakpoint — no
+          lg:static here. Mixing "static at desktop, fixed at mobile" with
+          a margin-based content offset is what caused the previous large
+          gap: at desktop width the sidebar would reserve its own 256px of
+          normal document flow AND the content would additionally be
+          pushed over by its own 256px margin, double-counting the offset. */}
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-30 flex w-64 transform flex-col bg-white shadow-sm ring-1 ring-gray-200 transition-transform dark:bg-gray-900 dark:ring-gray-800 lg:static lg:translate-x-0',
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-30 flex w-64 transform flex-col bg-white shadow-sm ring-1 ring-gray-200 transition-transform dark:bg-gray-900 dark:ring-gray-800',
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         <div className="flex h-14 items-center gap-2 border-b border-gray-100 px-4 dark:border-gray-800">
@@ -121,7 +127,12 @@ export function MainLayout() {
         <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={closeSidebar} />
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col lg:ml-64">
+      {/* This div is the ONLY thing responsible for offsetting past the
+          sidebar — ml-64 exactly matches the sidebar's w-64, applied at
+          every breakpoint since the sidebar is always fixed now. On
+          mobile the sidebar is translated off-screen but this margin
+          would still apply; we override it back to 0 below lg. */}
+      <div className="flex min-h-screen flex-col lg:ml-64">
         <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
           <button onClick={toggleSidebar} className="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
             <MenuIcon className="h-5 w-5" />
