@@ -7,29 +7,33 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loader } from '../components/common/Loader';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 
-const CategoryManagementPage = lazy(() =>
-  import('../pages/menu/CategoryManagementPage').then((m) => ({ default: m.CategoryManagementPage }))
+// "Menu" in the sidebar now points here — the ordering/POS screen.
+const NewOrderPage = lazy(() =>
+  import('../pages/orders/NewOrderPage').then((m) => ({ default: m.NewOrderPage }))
 );
 const ItemsManagementPage = lazy(() =>
   import('../pages/menu/ItemsManagementPage').then((m) => ({ default: m.ItemsManagementPage }))
 );
-const NewOrderPage = lazy(() =>
-  import('../pages/orders/NewOrderPage').then((m) => ({ default: m.NewOrderPage }))
-);
-const OrderHistoryPage = lazy(() =>
-  import('../pages/orders/OrderHistoryPage').then((m) => ({ default: m.OrderHistoryPage }))
+const CategoryManagementPage = lazy(() =>
+  import('../pages/menu/CategoryManagementPage').then((m) => ({ default: m.CategoryManagementPage }))
 );
 const KitchenDisplayPage = lazy(() =>
   import('../pages/kitchen/KitchenDisplayPage').then((m) => ({ default: m.KitchenDisplayPage }))
 );
-const InventoryPage = lazy(() =>
-  import('../pages/inventory/InventoryPage').then((m) => ({ default: m.InventoryPage }))
+const ReportsPage = lazy(() =>
+  import('../pages/reports/ReportsPage').then((m) => ({ default: m.ReportsPage }))
 );
 const StaffManagementPage = lazy(() =>
   import('../pages/staff/StaffManagementPage').then((m) => ({ default: m.StaffManagementPage }))
 );
-const ReportsPage = lazy(() =>
-  import('../pages/reports/ReportsPage').then((m) => ({ default: m.ReportsPage }))
+
+// Kept fully functional, just not linked from the sidebar per request —
+// reachable directly by URL, and easy to re-add to NAV_ITEMS later.
+const OrderHistoryPage = lazy(() =>
+  import('../pages/orders/OrderHistoryPage').then((m) => ({ default: m.OrderHistoryPage }))
+);
+const InventoryPage = lazy(() =>
+  import('../pages/inventory/InventoryPage').then((m) => ({ default: m.InventoryPage }))
 );
 const AuditLogPage = lazy(() =>
   import('../pages/audit/AuditLogPage').then((m) => ({ default: m.AuditLogPage }))
@@ -53,19 +57,20 @@ export function AppRouter() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route
-              path="/menu"
-              element={
-                <LazyPage>
-                  <CategoryManagementPage />
-                </LazyPage>
-              }
-            />
+
             <Route
               path="/items"
               element={
                 <LazyPage>
                   <ItemsManagementPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/items/categories"
+              element={
+                <LazyPage>
+                  <CategoryManagementPage />
                 </LazyPage>
               }
             />
@@ -80,10 +85,18 @@ export function AppRouter() {
 
             <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'CASHIER']} />}>
               <Route
-                path="/orders/new"
+                path="/menu"
                 element={
                   <LazyPage>
                     <NewOrderPage />
+                  </LazyPage>
+                }
+              />
+              <Route
+                path="/orders/history"
+                element={
+                  <LazyPage>
+                    <OrderHistoryPage />
                   </LazyPage>
                 }
               />
@@ -109,14 +122,6 @@ export function AppRouter() {
             </Route>
 
             <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
-              <Route
-                path="/orders/history"
-                element={
-                  <LazyPage>
-                    <OrderHistoryPage />
-                  </LazyPage>
-                }
-              />
               <Route
                 path="/staff"
                 element={
