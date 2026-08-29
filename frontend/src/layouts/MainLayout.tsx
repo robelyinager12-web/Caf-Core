@@ -1,15 +1,11 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Layers,
   UtensilsCrossed,
-  ShoppingCart,
-  ChefHat,
   Package,
+  ChefHat,
   Users,
   BarChart3,
-  ShieldAlert,
-  Settings as SettingsIcon,
   LogOut,
   Menu as MenuIcon,
 } from 'lucide-react';
@@ -29,18 +25,21 @@ interface NavItem {
   roles?: Role[];
 }
 
+// Exactly six nav items, matching the requested reference design. "Menu"
+// is now the ordering/POS screen (search + category cards + cart) rather
+// than a category-management list — category CRUD still exists in the
+// codebase, just reachable via a link on the Items page instead of its
+// own sidebar entry. Order History, Inventory, Audit Log, and Settings
+// remain fully functional in the router (see AppRouter.tsx) but are
+// intentionally left out of this list per request — nothing was deleted,
+// only unlinked from the sidebar.
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/menu', label: 'Menu', icon: Layers },
-  { to: '/items', label: 'Items', icon: UtensilsCrossed },
-  { to: '/orders/new', label: 'New Order', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'CASHIER'] },
-  { to: '/orders/history', label: 'Order History', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER'] },
+  { to: '/menu', label: 'Menu', icon: UtensilsCrossed, roles: ['ADMIN', 'MANAGER', 'CASHIER'] },
+  { to: '/items', label: 'Items', icon: Package },
   { to: '/kitchen', label: 'Kitchen Orders', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN'] },
-  { to: '/inventory', label: 'Inventory', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN'] },
-  { to: '/staff', label: 'Users Accounts', icon: Users, roles: ['ADMIN', 'MANAGER'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
-  { to: '/audit-log', label: 'Audit Log', icon: ShieldAlert, roles: ['ADMIN'] },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { to: '/staff', label: 'Users Accounts', icon: Users, roles: ['ADMIN', 'MANAGER'] },
 ];
 
 function initials(fullName?: string): string {
