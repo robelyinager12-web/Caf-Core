@@ -28,14 +28,17 @@ interface NavItem {
   roles?: Role[];
 }
 
+// Labels renamed to match the reference design (Kitchen Orders, Users
+// Accounts) — routes and underlying pages/permissions are unchanged, this
+// is purely a display-name update.
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/menu', label: 'Menu', icon: UtensilsCrossed },
   { to: '/orders/new', label: 'New Order', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER', 'CASHIER'] },
   { to: '/orders/history', label: 'Order History', icon: ShoppingCart, roles: ['ADMIN', 'MANAGER'] },
-  { to: '/kitchen', label: 'Kitchen Display', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN'] },
+  { to: '/kitchen', label: 'Kitchen Orders', icon: ChefHat, roles: ['ADMIN', 'MANAGER', 'KITCHEN'] },
   { to: '/inventory', label: 'Inventory', icon: Package, roles: ['ADMIN', 'MANAGER', 'KITCHEN'] },
-  { to: '/staff', label: 'Staff', icon: Users, roles: ['ADMIN', 'MANAGER'] },
+  { to: '/staff', label: 'Users Accounts', icon: Users, roles: ['ADMIN', 'MANAGER'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['ADMIN', 'MANAGER'] },
   { to: '/audit-log', label: 'Audit Log', icon: ShieldAlert, roles: ['ADMIN'] },
   { to: '/settings', label: 'Settings', icon: SettingsIcon },
