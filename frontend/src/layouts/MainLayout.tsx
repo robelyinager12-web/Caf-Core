@@ -28,9 +28,6 @@ interface NavItem {
   roles?: Role[];
 }
 
-// Labels renamed to match the reference design (Kitchen Orders, Users
-// Accounts) — routes and underlying pages/permissions are unchanged, this
-// is purely a display-name update.
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/menu', label: 'Menu', icon: UtensilsCrossed },
@@ -124,20 +121,20 @@ export function MainLayout() {
         <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={closeSidebar} />
       )}
 
-      <div className="flex flex-1 flex-col lg:pl-64">
-        <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900 lg:px-8">
-          <button onClick={toggleSidebar} className="text-gray-600 dark:text-gray-300">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
+        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
+          <button onClick={toggleSidebar} className="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
             <MenuIcon className="h-5 w-5" />
           </button>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             <NotificationBell />
             <ShiftClockWidget />
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-8">
+        <main className="flex-1 p-4">
           <Outlet />
         </main>
       </div>
