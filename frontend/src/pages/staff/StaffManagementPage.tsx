@@ -4,6 +4,9 @@ import {
   UserPlus,
   ArrowUpDown,
   MoreHorizontal,
+  Pencil,
+  UserX,
+  UserCheck,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -67,24 +70,29 @@ function ActionsMenu({
   }, []);
 
   return (
-    <div className="relative flex justify-center" ref={ref}>
+    <div className="relative flex justify-end" ref={ref}>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
+
       {isOpen && (
-        <div className="absolute right-0 top-8 z-20 w-40 rounded-lg bg-white py-1 shadow-lg ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+        <div className="absolute right-0 top-9 z-20 w-48 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
           <button
             onClick={() => {
               onEdit();
               setIsOpen(false);
             }}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
           >
+            <Pencil className="h-4 w-4 text-gray-400" />
             Edit
           </button>
+
+          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+
           <button
             onClick={() => {
               onToggleActive();
@@ -92,8 +100,12 @@ function ActionsMenu({
             }}
             disabled={isSelf}
             title={isSelf ? "You can't deactivate your own account" : undefined}
-            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300 dark:text-gray-200 dark:hover:bg-gray-700 dark:disabled:text-gray-600"
+            className={clsx(
+              'flex w-full items-center gap-2 px-3 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-40',
+              user.isActive ? 'text-danger hover:bg-danger/10' : 'text-success hover:bg-success/10'
+            )}
           >
+            {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
             {user.isActive ? 'Deactivate' : 'Activate'}
           </button>
         </div>
@@ -211,8 +223,8 @@ export function StaffManagementPage() {
       <ActiveStaffPanel />
 
       <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-4 dark:border-gray-800">
-          <div className="flex flex-1 min-w-[200px] items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-6 border-b border-gray-100 p-4 dark:border-gray-800">
+          <div className="flex flex-1 min-w-[240px] items-center gap-2">
             <input
               value={search}
               onChange={(e) => {
@@ -226,6 +238,7 @@ export function StaffManagementPage() {
               Filter
             </button>
           </div>
+
           <button
             onClick={() => {
               setEditingUser(undefined);
@@ -261,7 +274,7 @@ export function StaffManagementPage() {
                     <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
-                <th className="px-4 py-3 text-center font-medium">Actions</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
