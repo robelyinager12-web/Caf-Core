@@ -11,6 +11,18 @@ export async function createCategory(payload: { name: string; displayOrder?: num
   return data.data as Category;
 }
 
+export async function updateCategory(
+  id: string,
+  payload: { name?: string; displayOrder?: number }
+): Promise<Category> {
+  const { data } = await api.patch(`/categories/${id}`, payload);
+  return data.data;
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await api.delete(`/categories/${id}`);
+}
+
 interface MenuItemsQuery {
   categoryId?: string;
   search?: string;
