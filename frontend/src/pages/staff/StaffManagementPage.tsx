@@ -76,6 +76,7 @@ function ActionsMenu({
   return (
     <div className="relative flex justify-end" ref={ref}>
       <button
+        type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
       >
@@ -83,10 +84,11 @@ function ActionsMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-9 z-20 w-44 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+        <div className="absolute right-0 top-9 z-50 w-44 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
           <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">Actions</p>
 
           <button
+            type="button"
             onClick={() => {
               onEdit();
               setIsOpen(false);
@@ -98,6 +100,7 @@ function ActionsMenu({
           </button>
 
           <button
+            type="button"
             onClick={() => {
               onToggleActive();
               setIsOpen(false);
@@ -117,6 +120,7 @@ function ActionsMenu({
           <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
 
           <button
+            type="button"
             onClick={() => {
               onDeleteAttempt();
               setIsOpen(false);
@@ -271,82 +275,89 @@ export function StaffManagementPage() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-                <th className="px-4 py-3 font-medium">
-                  <button onClick={() => toggleSort('fullName')} className="flex items-center gap-1 hover:text-gray-600">
-                    Name
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="px-4 py-3 font-medium">
-                  <button onClick={() => toggleSort('email')} className="flex items-center gap-1 hover:text-gray-600">
-                    Email
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">
-                  <button onClick={() => toggleSort('createdAt')} className="flex items-center gap-1 hover:text-gray-600">
-                    Created At
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
+        {/* NOTE: no overflow-x-auto wrapper here anymore. That wrapper was
+            the actual bug — setting overflow-x: auto forces the browser to
+            also treat overflow-y as auto/clipped on the same element (this
+            is standard CSS behavior, not a Tailwind quirk), which silently
+            cut off the absolutely-positioned Actions dropdown any time it
+            tried to render below a row. The table's five columns are narrow
+            enough not to need horizontal scrolling on realistic screen
+            widths, so removing this wrapper has no visual downside and
+            fully fixes the dropdown. */}
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              <th className="px-4 py-3 font-medium">
+                <button onClick={() => toggleSort('fullName')} className="flex items-center gap-1 hover:text-gray-600">
+                  Name
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </th>
+              <th className="px-4 py-3 font-medium">
+                <button onClick={() => toggleSort('email')} className="flex items-center gap-1 hover:text-gray-600">
+                  Email
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">
+                <button onClick={() => toggleSort('createdAt')} className="flex items-center gap-1 hover:text-gray-600">
+                  Created At
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+            {pagedUsers.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No Results
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-              {pagedUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-                    No Results
-                  </td>
-                </tr>
-              ) : (
-                pagedUsers.map((user) => {
-                  const isSelf = user.id === currentUser?.id;
-                  return (
-                    <tr key={user.id}>
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                        {user.fullName} {isSelf && <span className="text-xs text-gray-400">(You)</span>}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={clsx(
-                            'rounded-full px-2.5 py-1 text-xs font-medium',
-                            user.isActive
-                              ? 'bg-success/10 text-success'
-                              : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
-                          )}
-                        >
-                          {user.isActive ? 'ACTIVE' : 'BLOCKED'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
-                        {user.createdAt ? formatDate(user.createdAt) : '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <ActionsMenu
-                          user={user}
-                          isSelf={isSelf}
-                          onEdit={() => {
-                            setEditingUser(user);
-                            setIsFormOpen(true);
-                          }}
-                          onToggleActive={() => toggleActiveMutation.mutate({ user })}
-                          onDeleteAttempt={() => setDeleteAttemptUser(user)}
-                        />
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+            ) : (
+              pagedUsers.map((user) => {
+                const isSelf = user.id === currentUser?.id;
+                return (
+                  <tr key={user.id}>
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                      {user.fullName} {isSelf && <span className="text-xs text-gray-400">(You)</span>}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={clsx(
+                          'rounded-full px-2.5 py-1 text-xs font-medium',
+                          user.isActive
+                            ? 'bg-success/10 text-success'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                        )}
+                      >
+                        {user.isActive ? 'ACTIVE' : 'BLOCKED'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
+                      {user.createdAt ? formatDate(user.createdAt) : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ActionsMenu
+                        user={user}
+                        isSelf={isSelf}
+                        onEdit={() => {
+                          setEditingUser(user);
+                          setIsFormOpen(true);
+                        }}
+                        onToggleActive={() => toggleActiveMutation.mutate({ user })}
+                        onDeleteAttempt={() => setDeleteAttemptUser(user)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
           <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredAndSorted.length} rows.</p>
