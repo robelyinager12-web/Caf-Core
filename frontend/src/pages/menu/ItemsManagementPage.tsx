@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Layers } from 'lucide-react';
 import { CategoryList } from '../../components/menu/CategoryList';
 import { MenuItemCard } from '../../components/menu/MenuItemCard';
 import { MenuItemForm } from '../../components/menu/MenuItemForm';
@@ -103,17 +104,28 @@ export function ItemsManagementPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Items</h1>
-        {canManage && (
-          <Button
-            onClick={() => {
-              setEditingItem(undefined);
-              setIsFormOpen(true);
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Add Item
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canManage && (
+            <Link
+              to="/items/categories"
+              className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <Layers className="h-4 w-4" />
+              Manage Categories
+            </Link>
+          )}
+          {canManage && (
+            <Button
+              onClick={() => {
+                setEditingItem(undefined);
+                setIsFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Add Item
+            </Button>
+          )}
+        </div>
       </div>
 
       <CategoryList
