@@ -7,8 +7,11 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loader } from '../components/common/Loader';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 
-const MenuManagementPage = lazy(() =>
-  import('../pages/menu/MenuManagementPage').then((m) => ({ default: m.MenuManagementPage }))
+const CategoryManagementPage = lazy(() =>
+  import('../pages/menu/CategoryManagementPage').then((m) => ({ default: m.CategoryManagementPage }))
+);
+const ItemsManagementPage = lazy(() =>
+  import('../pages/menu/ItemsManagementPage').then((m) => ({ default: m.ItemsManagementPage }))
 );
 const NewOrderPage = lazy(() =>
   import('../pages/orders/NewOrderPage').then((m) => ({ default: m.NewOrderPage }))
@@ -54,7 +57,15 @@ export function AppRouter() {
               path="/menu"
               element={
                 <LazyPage>
-                  <MenuManagementPage />
+                  <CategoryManagementPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/items"
+              element={
+                <LazyPage>
+                  <ItemsManagementPage />
                 </LazyPage>
               }
             />
