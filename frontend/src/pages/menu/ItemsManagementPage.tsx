@@ -20,7 +20,7 @@ import {
 import { MenuItem, CreateMenuItemPayload } from '../../types/menu.types';
 import { getErrorMessage } from '../../utils/validators';
 
-export function MenuManagementPage() {
+export function ItemsManagementPage() {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | undefined>(undefined);
@@ -45,7 +45,7 @@ export function MenuManagementPage() {
     mutationFn: createMenuItem,
     onSuccess: () => {
       invalidateMenu();
-      showToast('Menu item created');
+      showToast('Item created');
       setIsFormOpen(false);
     },
     onError: (error) => showToast(getErrorMessage(error), 'error'),
@@ -56,7 +56,7 @@ export function MenuManagementPage() {
       updateMenuItem(id, payload),
     onSuccess: () => {
       invalidateMenu();
-      showToast('Menu item updated');
+      showToast('Item updated');
       setIsFormOpen(false);
       setEditingItem(undefined);
     },
@@ -67,7 +67,7 @@ export function MenuManagementPage() {
     mutationFn: deleteMenuItem,
     onSuccess: () => {
       invalidateMenu();
-      showToast('Menu item deleted');
+      showToast('Item deleted');
     },
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
@@ -96,13 +96,13 @@ export function MenuManagementPage() {
   }
 
   if (categoriesQuery.isLoading || menuItemsQuery.isLoading) {
-    return <Loader label="Loading menu..." />;
+    return <Loader label="Loading items..." />;
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Menu</h1>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Items</h1>
         {canManage && (
           <Button
             onClick={() => {
@@ -141,7 +141,9 @@ export function MenuManagementPage() {
           ))}
         </div>
       ) : (
-        <p className="py-12 text-center text-sm text-gray-500">No menu items in this category yet.</p>
+        <p className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+          No items in this category yet.
+        </p>
       )}
 
       <Modal
@@ -150,7 +152,7 @@ export function MenuManagementPage() {
           setIsFormOpen(false);
           setEditingItem(undefined);
         }}
-        title={editingItem ? 'Edit Menu Item' : 'Add Menu Item'}
+        title={editingItem ? 'Edit Item' : 'Add Item'}
       >
         <MenuItemForm
           categories={categoriesQuery.data ?? []}
