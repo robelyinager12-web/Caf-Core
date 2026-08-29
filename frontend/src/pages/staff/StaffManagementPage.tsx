@@ -5,8 +5,9 @@ import {
   ArrowUpDown,
   MoreHorizontal,
   Pencil,
-  UserX,
-  UserCheck,
+  Ban,
+  CheckCircle2,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -17,6 +18,7 @@ import { api } from '../../services/api';
 import { StaffForm } from '../../components/staff/StaffForm';
 import { ActiveStaffPanel } from '../../components/staff/ActiveStaffPanel';
 import { Modal } from '../../components/common/Modal';
+import { Button } from '../../components/common/Button';
 import { Loader } from '../../components/common/Loader';
 import { useToastStore } from '../../components/common/Toast';
 import { useAuthStore } from '../../store/authStore';
@@ -52,11 +54,13 @@ function ActionsMenu({
   isSelf,
   onEdit,
   onToggleActive,
+  onDeleteAttempt,
 }: {
   user: User;
   isSelf: boolean;
   onEdit: () => void;
   onToggleActive: () => void;
+  onDeleteAttempt: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -79,7 +83,9 @@ function ActionsMenu({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-9 z-20 w-48 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+        <div className="absolute right-0 top-9 z-20 w-44 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+          <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">Actions</p>
+
           <button
             onClick={() => {
               onEdit();
@@ -91,22 +97,34 @@ function ActionsMenu({
             Edit
           </button>
 
-          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
-
           <button
             onClick={() => {
               onToggleActive();
               setIsOpen(false);
             }}
             disabled={isSelf}
-            title={isSelf ? "You can't deactivate your own account" : undefined}
-            className={clsx(
-              'flex w-full items-center gap-2 px-3 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-40',
-              user.isActive ? 'text-danger hover:bg-danger/10' : 'text-success hover:bg-success/10'
-            )}
+            title={isSelf ? "You can't block your own account" : undefined}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-gray-200 dark:hover:bg-gray-800"
           >
-            {user.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-            {user.isActive ? 'Deactivate' : 'Activate'}
+            {user.isActive ? (
+              <Ban className="h-4 w-4 text-gray-400" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-gray-400" />
+            )}
+            {user.isActive ? 'Block' : 'Unblock'}
+          </button>
+
+          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+
+          <button
+            onClick={() => {
+              onDeleteAttempt();
+              setIsOpen(false);
+            }}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-danger/10"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
           </button>
         </div>
       )}
@@ -122,6 +140,7 @@ export function StaffManagementPage() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
+  const [deleteAttemptUser, setDeleteAttemptUser] = useState<User | undefined>(undefined);
 
   const currentUser = useAuthStore((state) => state.user);
   const queryClient = useQueryClient();
@@ -158,9 +177,10 @@ export function StaffManagementPage() {
   const toggleActiveMutation = useMutation({
     mutationFn: ({ user }: { user: User }) =>
       user.isActive ? deactivateUserRequest(user.id) : updateUserRequest(user.id, { isActive: true }),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       invalidate();
-      showToast('Staff status updated');
+      showToast(variables.user.isActive ? 'Account blocked' : 'Account unblocked');
+      setDeleteAttemptUser(undefined);
     },
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
@@ -302,7 +322,7 @@ export function StaffManagementPage() {
                               : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
                           )}
                         >
-                          {user.isActive ? 'ACTIVE' : 'INACTIVE'}
+                          {user.isActive ? 'ACTIVE' : 'BLOCKED'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
@@ -317,6 +337,7 @@ export function StaffManagementPage() {
                             setIsFormOpen(true);
                           }}
                           onToggleActive={() => toggleActiveMutation.mutate({ user })}
+                          onDeleteAttempt={() => setDeleteAttemptUser(user)}
                         />
                       </td>
                     </tr>
@@ -398,6 +419,42 @@ export function StaffManagementPage() {
           onSubmit={handleSubmit}
           isSubmitting={createMutation.isPending || updateMutation.isPending}
         />
+      </Modal>
+
+      <Modal
+        isOpen={!!deleteAttemptUser}
+        onClose={() => setDeleteAttemptUser(undefined)}
+        title="Can't permanently delete this account"
+      >
+        {deleteAttemptUser && (
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              <strong>{deleteAttemptUser.fullName}</strong>'s account can't be permanently deleted,
+              because staff accounts are linked to real order, payment, and audit history — removing
+              the account would break that history rather than just hiding it.
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              Blocking the account has the same practical effect: they immediately lose the ability
+              to log in, while all past records stay intact for reporting and audit purposes.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteAttemptUser(undefined)}
+                className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <Button
+                variant="danger"
+                onClick={() => toggleActiveMutation.mutate({ user: deleteAttemptUser })}
+                isLoading={toggleActiveMutation.isPending}
+                disabled={deleteAttemptUser.id === currentUser?.id}
+              >
+                Block Instead
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );
