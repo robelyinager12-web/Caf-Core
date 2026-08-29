@@ -31,25 +31,19 @@ interface StatCardProps {
 
 function StatCard({ label, value, subtext, icon: Icon }: StatCardProps) {
   return (
-    <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+    <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
       <div className="flex items-start justify-between">
         <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</p>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/10">
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <p className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+      <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
       {subtext && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{subtext}</p>}
     </div>
   );
 }
 
-// Order numbers in this system (ORD-20260828-0001) are longer than a plain
-// sequential number — shortening the display here (dropping the "ORD-"
-// prefix and date segment, keeping only the trailing sequence) keeps the
-// Latest Orders table compact enough to avoid the column-wrapping/
-// horizontal-scroll issue that a long full order number causes. The full
-// number is still available via the title tooltip and in Order History.
 function shortOrderLabel(orderNumber: string): string {
   const parts = orderNumber.split('-');
   return parts.length === 3 ? `#${parts[2]}` : orderNumber;
@@ -86,7 +80,7 @@ export function DashboardPage() {
 
   const recentOrdersQuery = useQuery({
     queryKey: ['orders', 'recent'],
-    queryFn: () => getOrders({ limit: 6 }),
+    queryFn: () => getOrders({ limit: 10 }),
   });
 
   if (salesQuery.isLoading || menuItemsQuery.isLoading) {
@@ -97,7 +91,7 @@ export function DashboardPage() {
   const rangeLabel = `${formatDateOnly(last7Days.from)} - ${formatDateOnly(last7Days.to)}`;
 
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex w-full flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
         <span className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:ring-gray-800">
@@ -106,7 +100,7 @@ export function DashboardPage() {
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Total Items"
           value={String(menuItemsQuery.data?.length ?? 0)}
@@ -133,12 +127,12 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="min-w-0 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
           <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
             Orders and Sales Summary
           </h2>
-          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">{rangeLabel}</p>
+          <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">{rangeLabel}</p>
           {weeklySalesQuery.isLoading ? (
             <Loader label="Loading chart..." />
           ) : (
@@ -146,9 +140,9 @@ export function DashboardPage() {
           )}
         </div>
 
-        <div className="min-w-0 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+        <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
           <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Latest Orders</h2>
-          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">Showing latest orders</p>
+          <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">Showing latest orders</p>
 
           {recentOrdersQuery.isLoading ? (
             <Loader label="Loading orders..." />
@@ -196,26 +190,26 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-        <h2 className="mb-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
+      <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+        <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
           Top Selling Items Today
         </h2>
         {topItemsQuery.isLoading ? (
           <Loader label="Loading top items..." />
         ) : topItemsQuery.data && topItemsQuery.data.length > 0 ? (
-          <ul className="flex flex-col gap-2">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {topItemsQuery.data.map((item, index) => (
               <li
                 key={item.menuItemId}
                 className="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm dark:bg-gray-800"
               >
-                <span className="flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/10 dark:text-primary-500">
+                <span className="flex items-center gap-2 truncate text-gray-800 dark:text-gray-200">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700 dark:bg-primary-500/10 dark:text-primary-500">
                     {index + 1}
                   </span>
-                  {item.name}
+                  <span className="truncate">{item.name}</span>
                 </span>
-                <span className="text-gray-500 dark:text-gray-400">{item.quantitySold} sold</span>
+                <span className="shrink-0 text-gray-500 dark:text-gray-400">{item.quantitySold}</span>
               </li>
             ))}
           </ul>
