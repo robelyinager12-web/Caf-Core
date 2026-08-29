@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Coffee, DollarSign, ClipboardList, Clock3 } from 'lucide-react';
+import { Coffee, DollarSign, ClipboardList, Clock3, Calendar } from 'lucide-react';
 import { getSalesSummary, getTopItems } from '../../services/reportService';
 import { getMenuItems } from '../../services/menuService';
 import { getOrders } from '../../services/orderService';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { formatDate, toISODateStart, toISODateEnd } from '../../utils/formatDate';
+import { formatDate, formatDateOnly, toISODateStart, toISODateEnd } from '../../utils/formatDate';
 import { Loader } from '../../components/common/Loader';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
@@ -25,21 +25,21 @@ function last7DaysRange() {
 interface StatCardProps {
   label: string;
   value: string;
+  subtext?: string;
   icon: typeof Coffee;
 }
 
-function StatCard({ label, value, icon: Icon }: StatCardProps) {
+function StatCard({ label, value, subtext, icon: Icon }: StatCardProps) {
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-        </div>
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/10">
+      <div className="flex items-start justify-between">
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</p>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/10">
           <Icon className="h-4 w-4" />
         </span>
       </div>
+      <p className="mt-3 text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+      {subtext && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{subtext}</p>}
     </div>
   );
 }
@@ -83,30 +83,41 @@ export function DashboardPage() {
   }
 
   const summary = salesQuery.data;
+  const rangeLabel = `${formatDateOnly(last7Days.from)} - ${formatDateOnly(last7Days.to)}`;
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <span className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:text-gray-300 dark:ring-gray-800">
+          <Calendar className="h-3.5 w-3.5 text-gray-400" />
+          {rangeLabel}
+        </span>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Total Menu Items"
+          label="Total Items"
           value={String(menuItemsQuery.data?.length ?? 0)}
+          subtext="Across all categories"
           icon={Coffee}
         />
         <StatCard
-          label="Total Sale Revenue Today"
+          label="Total Sale Revenue"
           value={formatCurrency(summary?.totalRevenue ?? 0)}
+          subtext="Today"
           icon={DollarSign}
         />
         <StatCard
           label="Total Orders Today"
           value={String(summary?.totalOrders ?? 0)}
+          subtext="Completed orders"
           icon={ClipboardList}
         />
         <StatCard
           label="Pending Orders"
           value={String(pendingOrdersQuery.data?.length ?? 0)}
+          subtext="Awaiting the kitchen"
           icon={Clock3}
         />
       </div>
@@ -116,7 +127,7 @@ export function DashboardPage() {
           <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
             Orders and Sales Summary
           </h2>
-          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">Last 7 days</p>
+          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">{rangeLabel}</p>
           {weeklySalesQuery.isLoading ? (
             <Loader label="Loading chart..." />
           ) : (
@@ -126,7 +137,7 @@ export function DashboardPage() {
 
         <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
           <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Latest Orders</h2>
-          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">Showing most recent orders</p>
+          <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">Showing latest orders</p>
 
           {recentOrdersQuery.isLoading ? (
             <Loader label="Loading orders..." />
@@ -135,11 +146,11 @@ export function DashboardPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs text-gray-400 dark:text-gray-500">
-                    <th className="pb-2 pr-3 font-medium">Order #</th>
-                    <th className="pb-2 pr-3 font-medium">Total</th>
+                    <th className="pb-2 pr-3 font-medium">Order ID</th>
+                    <th className="pb-2 pr-3 font-medium">Amount</th>
                     <th className="pb-2 pr-3 font-medium">Status</th>
-                    <th className="pb-2 pr-3 font-medium">Payment</th>
-                    <th className="pb-2 font-medium">Date</th>
+                    <th className="pb-2 pr-3 font-medium">Payment Status</th>
+                    <th className="pb-2 font-medium">Created At</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
