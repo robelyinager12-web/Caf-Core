@@ -422,7 +422,7 @@ export function StaffManagementPage() {
           setIsFormOpen(false);
           setEditingUser(undefined);
         }}
-        title={editingUser ? 'Edit Staff Account' : 'Add Staff Account'}
+        title={editingUser ? 'Update User Information' : 'Add Staff Account'}
       >
         <StaffForm
           initialUser={editingUser}
