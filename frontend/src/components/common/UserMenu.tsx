@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Settings, Bell, LogOut } from 'lucide-react';
+import { User, CreditCard, Bell, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useLogout } from '../../hooks/useAuth';
 
@@ -31,9 +31,9 @@ export function UserMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  function goToSettings() {
+  function goTo(path: string) {
     setIsOpen(false);
-    navigate('/settings');
+    navigate(path);
   }
 
   return (
@@ -67,25 +67,25 @@ export function UserMenu() {
 
           <div className="flex flex-col pt-1">
             <button
-              onClick={goToSettings}
+              onClick={() => goTo('/settings')}
               className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               <User className="h-4 w-4 text-gray-400" />
               Account
             </button>
             <button
-              onClick={goToSettings}
+              onClick={() => goTo('/billing')}
+              className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <CreditCard className="h-4 w-4 text-gray-400" />
+              Billing
+            </button>
+            <button
+              onClick={() => goTo('/settings')}
               className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               <Bell className="h-4 w-4 text-gray-400" />
               Notifications
-            </button>
-            <button
-              onClick={goToSettings}
-              className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
-            >
-              <Settings className="h-4 w-4 text-gray-400" />
-              Settings
             </button>
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
             <button

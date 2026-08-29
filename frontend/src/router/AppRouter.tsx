@@ -7,7 +7,6 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loader } from '../components/common/Loader';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
 
-// "Menu" in the sidebar now points here — the ordering/POS screen.
 const NewOrderPage = lazy(() =>
   import('../pages/orders/NewOrderPage').then((m) => ({ default: m.NewOrderPage }))
 );
@@ -26,9 +25,9 @@ const ReportsPage = lazy(() =>
 const StaffManagementPage = lazy(() =>
   import('../pages/staff/StaffManagementPage').then((m) => ({ default: m.StaffManagementPage }))
 );
-
-// Kept fully functional, just not linked from the sidebar per request —
-// reachable directly by URL, and easy to re-add to NAV_ITEMS later.
+const BillingPage = lazy(() =>
+  import('../pages/billing/BillingPage').then((m) => ({ default: m.BillingPage }))
+);
 const OrderHistoryPage = lazy(() =>
   import('../pages/orders/OrderHistoryPage').then((m) => ({ default: m.OrderHistoryPage }))
 );
@@ -89,6 +88,14 @@ export function AppRouter() {
                 element={
                   <LazyPage>
                     <NewOrderPage />
+                  </LazyPage>
+                }
+              />
+              <Route
+                path="/billing"
+                element={
+                  <LazyPage>
+                    <BillingPage />
                   </LazyPage>
                 }
               />
