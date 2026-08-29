@@ -68,8 +68,6 @@ export function NewOrderPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-gray-900">New Order</h1>
-
       {lastOrder && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-success/10 px-4 py-3 text-sm">
           <span>
