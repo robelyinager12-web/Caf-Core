@@ -1,17 +1,25 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import {
+  UserPlus,
+  ArrowUpDown,
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
+import clsx from 'clsx';
 import { api } from '../../services/api';
-import { StaffTable } from '../../components/staff/StaffTable';
 import { StaffForm } from '../../components/staff/StaffForm';
 import { ActiveStaffPanel } from '../../components/staff/ActiveStaffPanel';
 import { Modal } from '../../components/common/Modal';
-import { Button } from '../../components/common/Button';
 import { Loader } from '../../components/common/Loader';
 import { useToastStore } from '../../components/common/Toast';
 import { useAuthStore } from '../../store/authStore';
 import { User, Role } from '../../types/user.types';
 import { getErrorMessage } from '../../utils/validators';
+import { formatDate } from '../../utils/formatDate';
 
 async function fetchUsers(): Promise<User[]> {
   const { data } = await api.get('/users');
@@ -33,7 +41,73 @@ async function deactivateUserRequest(id: string) {
   return data.data as User;
 }
 
+type SortKey = 'fullName' | 'email' | 'createdAt';
+const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
+
+function ActionsMenu({
+  user,
+  isSelf,
+  onEdit,
+  onToggleActive,
+}: {
+  user: User;
+  isSelf: boolean;
+  onEdit: () => void;
+  onToggleActive: () => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative flex justify-center" ref={ref}>
+      <button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {isOpen && (
+        <div className="absolute right-0 top-8 z-20 w-40 rounded-lg bg-white py-1 shadow-lg ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+          <button
+            onClick={() => {
+              onEdit();
+              setIsOpen(false);
+            }}
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => {
+              onToggleActive();
+              setIsOpen(false);
+            }}
+            disabled={isSelf}
+            title={isSelf ? "You can't deactivate your own account" : undefined}
+            className="block w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-300 dark:text-gray-200 dark:hover:bg-gray-700 dark:disabled:text-gray-600"
+          >
+            {user.isActive ? 'Deactivate' : 'Activate'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function StaffManagementPage() {
+  const [search, setSearch] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | undefined>(undefined);
 
@@ -87,36 +161,215 @@ export function StaffManagementPage() {
     }
   }
 
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
+  }
+
+  const filteredAndSorted = useMemo(() => {
+    let result = usersQuery.data ?? [];
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter(
+        (u) => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+      );
+    }
+
+    result = [...result].sort((a, b) => {
+      const aVal = a[sortKey] ?? '';
+      const bVal = b[sortKey] ?? '';
+      const diff = String(aVal).localeCompare(String(bVal));
+      return sortDirection === 'asc' ? diff : -diff;
+    });
+
+    return result;
+  }, [usersQuery.data, search, sortKey, sortDirection]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / rowsPerPage));
+  const currentPage = Math.min(page, totalPages);
+  const pagedUsers = filteredAndSorted.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
   if (usersQuery.isLoading) {
     return <Loader label="Loading staff..." />;
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Staff Management</h1>
-        <Button
-          onClick={() => {
-            setEditingUser(undefined);
-            setIsFormOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4" />
-          Add Staff
-        </Button>
+      <div>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Users</h1>
+        <p className="text-xs text-gray-400 dark:text-gray-500">Dashboard &gt; Users Accounts</p>
       </div>
 
       <ActiveStaffPanel />
 
-      <StaffTable
-        users={usersQuery.data ?? []}
-        currentUserId={currentUser?.id}
-        onEdit={(user) => {
-          setEditingUser(user);
-          setIsFormOpen(true);
-        }}
-        onToggleActive={(user) => toggleActiveMutation.mutate({ user })}
-      />
+      <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 p-4 dark:border-gray-800">
+          <div className="flex flex-1 min-w-[200px] items-center gap-2">
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search"
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+            />
+            <button className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700">
+              Filter
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setEditingUser(undefined);
+              setIsFormOpen(true);
+            }}
+            className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+          >
+            <UserPlus className="h-4 w-4" />
+            Create New
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+                <th className="px-4 py-3 font-medium">
+                  <button onClick={() => toggleSort('fullName')} className="flex items-center gap-1 hover:text-gray-600">
+                    Name
+                    <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <button onClick={() => toggleSort('email')} className="flex items-center gap-1 hover:text-gray-600">
+                    Email
+                    <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                </th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">
+                  <button onClick={() => toggleSort('createdAt')} className="flex items-center gap-1 hover:text-gray-600">
+                    Created At
+                    <ArrowUpDown className="h-3 w-3" />
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-center font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+              {pagedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                    No Results
+                  </td>
+                </tr>
+              ) : (
+                pagedUsers.map((user) => {
+                  const isSelf = user.id === currentUser?.id;
+                  return (
+                    <tr key={user.id}>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                        {user.fullName} {isSelf && <span className="text-xs text-gray-400">(You)</span>}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={clsx(
+                            'rounded-full px-2.5 py-1 text-xs font-medium',
+                            user.isActive
+                              ? 'bg-success/10 text-success'
+                              : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                          )}
+                        >
+                          {user.isActive ? 'ACTIVE' : 'INACTIVE'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
+                        {user.createdAt ? formatDate(user.createdAt) : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <ActionsMenu
+                          user={user}
+                          isSelf={isSelf}
+                          onEdit={() => {
+                            setEditingUser(user);
+                            setIsFormOpen(true);
+                          }}
+                          onToggleActive={() => toggleActiveMutation.mutate({ user })}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
+          <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredAndSorted.length} rows.</p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              Rows per page
+              <select
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-lg border border-gray-300 px-2 py-1 text-xs dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+              >
+                {ROWS_PER_PAGE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage(1)}
+                disabled={currentPage === 1}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-800"
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-800"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-800"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-30 dark:hover:bg-gray-800"
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Modal
         isOpen={isFormOpen}
