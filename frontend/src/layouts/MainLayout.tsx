@@ -68,7 +68,7 @@ export function MainLayout() {
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex h-16 items-center gap-2 border-b border-gray-100 px-5 dark:border-gray-800">
+        <div className="flex h-14 items-center gap-2 border-b border-gray-100 px-4 dark:border-gray-800">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-600 text-white">
             <ChefHat className="h-4 w-4" />
           </span>
@@ -121,7 +121,7 @@ export function MainLayout() {
         <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={closeSidebar} />
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
+      <div className="flex min-w-0 flex-1 flex-col lg:ml-64">
         <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
           <button onClick={toggleSidebar} className="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
             <MenuIcon className="h-5 w-5" />
