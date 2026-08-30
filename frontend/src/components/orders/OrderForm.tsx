@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Minus, Trash2, Search } from 'lucide-react';
+import { Plus, Minus, Trash2, Search, ImageOff } from 'lucide-react';
 import { CategoryCardGrid } from './CategoryCardGrid';
 import { Button } from '../common/Button';
 import { Category, MenuItem } from '../../types/menu.types';
@@ -101,25 +101,52 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
             No items match this search or category.
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {visibleItems.map((item) => {
               const isOrderable = item.isAvailable !== false;
               return (
-                <button
+                <div
                   key={item.id}
-                  type="button"
-                  onClick={() => isOrderable && addToCart(item)}
-                  disabled={!isOrderable}
-                  className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-gray-900"
+                  className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
                 >
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {item.name}
-                  </span>
-                  <span className="text-sm font-semibold text-primary-600">
-                    {formatCurrency(item.price)}
-                  </span>
-                  {!isOrderable && <span className="text-xs text-danger">Unavailable</span>}
-                </button>
+                  <div className="aspect-[4/3] w-full bg-gray-100 dark:bg-gray-800">
+                    {item.imageUrl ? (
+                      <img
+                        src={`${import.meta.env.VITE_SOCKET_URL}${item.imageUrl}`}
+                        alt={item.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <ImageOff className="h-6 w-6 text-gray-300" />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-1 flex-col gap-2 p-3">
+                    <p className="line-clamp-2 text-xs font-medium text-gray-900 dark:text-gray-100">
+                      {item.name}
+                    </p>
+                    <p className="text-sm font-semibold text-primary-600">
+                      {formatCurrency(item.price)}
+                    </p>
+
+                    {isOrderable ? (
+                      <button
+                        type="button"
+                        onClick={() => addToCart(item)}
+                        className="mt-auto rounded-lg bg-primary-600 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+                      >
+                        Add
+                      </button>
+                    ) : (
+                      <span className="mt-auto rounded-lg bg-gray-100 py-1.5 text-center text-xs font-medium text-gray-400 dark:bg-gray-800">
+                        Unavailable
+                      </span>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
