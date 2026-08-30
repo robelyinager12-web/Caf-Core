@@ -1,7 +1,18 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowRight, XCircle } from 'lucide-react';
+import {
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  MoreHorizontal,
+  ArrowRight,
+  Printer,
+  XCircle,
+} from 'lucide-react';
 import { getOrders, updateOrderStatus } from '../../services/orderService';
+import { fetchReceiptBlob, openReceiptBlob } from '../../services/paymentService';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { Loader } from '../../components/common/Loader';
@@ -23,7 +34,7 @@ const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 const NEXT_LABEL: Partial<Record<OrderStatus, string>> = {
   PENDING: 'Start Preparing',
   PREPARING: 'Mark Ready',
-  READY: 'Complete',
+  READY: 'Complete Order',
 };
 
 function shortOrderLabel(orderNumber: string): string {
@@ -31,13 +42,108 @@ function shortOrderLabel(orderNumber: string): string {
   return parts.length === 3 ? `#${parts[2]}` : orderNumber;
 }
 
-// Sorts unpaid before paid before refunded, so the busiest/most-actionable
-// rows surface first when the Payment Status column header is clicked.
 const PAYMENT_SORT_WEIGHT: Record<string, number> = { unpaid: 0, PAID: 1, REFUNDED: 2 };
+
+function OrderActionsMenu({
+  order,
+  onAdvance,
+  onCancel,
+  onPrintReceipt,
+  isUpdating,
+  isPrinting,
+}: {
+  order: Order;
+  onAdvance: () => void;
+  onCancel: () => void;
+  onPrintReceipt: () => void;
+  isUpdating: boolean;
+  isPrinting: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setIsOpen(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const nextLabel = NEXT_LABEL[order.status];
+  const canCancel = order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
+
+  return (
+    <div className="relative flex justify-end" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-9 z-50 w-48 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+          <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">Actions</p>
+
+          {order.payment && (
+            <button
+              type="button"
+              onClick={() => {
+                onPrintReceipt();
+                setIsOpen(false);
+              }}
+              disabled={isPrinting}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <Printer className="h-4 w-4 text-gray-400" />
+              Print Receipt
+            </button>
+          )}
+
+          {nextLabel && (
+            <button
+              type="button"
+              onClick={() => {
+                onAdvance();
+                setIsOpen(false);
+              }}
+              disabled={isUpdating}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <ArrowRight className="h-4 w-4 text-gray-400" />
+              {nextLabel}
+            </button>
+          )}
+
+          {canCancel && (
+            <>
+              <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+              <button
+                type="button"
+                onClick={() => {
+                  onCancel();
+                  setIsOpen(false);
+                }}
+                disabled={isUpdating}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancel Order
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function KitchenDisplayPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | undefined>();
+  const [printingOrderId, setPrintingOrderId] = useState<string | undefined>();
   const [search, setSearch] = useState('');
   const [paymentSortDirection, setPaymentSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [page, setPage] = useState(1);
@@ -98,6 +204,18 @@ export function KitchenDisplayPage() {
   function handleCancel(order: Order) {
     if (confirm(`Cancel order ${order.orderNumber}?`)) {
       statusMutation.mutate({ id: order.id, status: 'CANCELLED' });
+    }
+  }
+
+  async function handlePrintReceipt(order: Order) {
+    setPrintingOrderId(order.id);
+    try {
+      const blob = await fetchReceiptBlob(order.id);
+      openReceiptBlob(blob);
+    } catch (error) {
+      showToast(getErrorMessage(error), 'error');
+    } finally {
+      setPrintingOrderId(undefined);
     }
   }
 
@@ -166,81 +284,69 @@ export function KitchenDisplayPage() {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-                <th className="px-4 py-3 font-medium">Order ID</th>
-                <th className="px-4 py-3 font-medium">Table No</th>
-                <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">
-                  <button onClick={togglePaymentSort} className="flex items-center gap-1 hover:text-gray-600">
-                    Payment Status
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
+        {/* No overflow-x-auto wrapper — that clips the Actions dropdown,
+            same bug fixed on the Users Accounts page. Six columns fit
+            comfortably on any realistic desktop width without needing
+            horizontal scroll. */}
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              <th className="px-4 py-3 font-medium">Order ID</th>
+              <th className="px-4 py-3 font-medium">Table No</th>
+              <th className="px-4 py-3 font-medium">Amount</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">
+                <button onClick={togglePaymentSort} className="flex items-center gap-1 hover:text-gray-600">
+                  Payment Status
+                  <ArrowUpDown className="h-3 w-3" />
+                </button>
+              </th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+            {pagedOrders.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No Results
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-              {pagedOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-                    No Results
+            ) : (
+              pagedOrders.map((order) => (
+                <tr key={order.id}>
+                  <td
+                    className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100"
+                    title={order.orderNumber}
+                  >
+                    {shortOrderLabel(order.orderNumber)}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                    {order.orderType === 'DINE_IN' ? order.tableOrToken ?? '—' : 'Takeaway'}
+                  </td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                    {formatCurrency(order.total)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <OrderStatusBadge status={order.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <PaymentStatusBadge payment={order.payment} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <OrderActionsMenu
+                      order={order}
+                      onAdvance={() => handleAdvance(order)}
+                      onCancel={() => handleCancel(order)}
+                      onPrintReceipt={() => handlePrintReceipt(order)}
+                      isUpdating={updatingOrderId === order.id}
+                      isPrinting={printingOrderId === order.id}
+                    />
                   </td>
                 </tr>
-              ) : (
-                pagedOrders.map((order) => {
-                  const nextLabel = NEXT_LABEL[order.status];
-                  return (
-                    <tr key={order.id}>
-                      <td
-                        className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100"
-                        title={order.orderNumber}
-                      >
-                        {shortOrderLabel(order.orderNumber)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                        {order.orderType === 'DINE_IN' ? order.tableOrToken ?? '—' : 'Takeaway'}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                        {formatCurrency(order.total)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <OrderStatusBadge status={order.status} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <PaymentStatusBadge payment={order.payment} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          {nextLabel && (
-                            <button
-                              onClick={() => handleAdvance(order)}
-                              disabled={updatingOrderId === order.id}
-                              className="flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700 disabled:opacity-60"
-                            >
-                              {nextLabel}
-                              <ArrowRight className="h-3 w-3" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleCancel(order)}
-                            disabled={updatingOrderId === order.id}
-                            className="rounded-lg bg-danger/10 p-1.5 text-danger hover:bg-danger/20 disabled:opacity-60"
-                          >
-                            <XCircle className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
           <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredOrders.length} rows.</p>
