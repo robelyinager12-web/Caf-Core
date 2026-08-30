@@ -15,6 +15,7 @@ import { getOrders, updateOrderStatus } from '../../services/orderService';
 import { fetchReceiptBlob, openReceiptBlob } from '../../services/paymentService';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
+import { ReceiptPreviewModal } from '../../components/orders/ReceiptPreviewModal';
 import { Loader } from '../../components/common/Loader';
 import { useSocket } from '../../hooks/useSocket';
 import { useToastStore } from '../../components/common/Toast';
@@ -48,16 +49,14 @@ function OrderActionsMenu({
   order,
   onAdvance,
   onCancel,
-  onPrintReceipt,
+  onOpenReceiptPreview,
   isUpdating,
-  isPrinting,
 }: {
   order: Order;
   onAdvance: () => void;
   onCancel: () => void;
-  onPrintReceipt: () => void;
+  onOpenReceiptPreview: () => void;
   isUpdating: boolean;
-  isPrinting: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -91,11 +90,10 @@ function OrderActionsMenu({
             <button
               type="button"
               onClick={() => {
-                onPrintReceipt();
+                onOpenReceiptPreview();
                 setIsOpen(false);
               }}
-              disabled={isPrinting}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               <Printer className="h-4 w-4 text-gray-400" />
               Print Receipt
@@ -143,7 +141,8 @@ function OrderActionsMenu({
 export function KitchenDisplayPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | undefined>();
-  const [printingOrderId, setPrintingOrderId] = useState<string | undefined>();
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [receiptPreviewOrder, setReceiptPreviewOrder] = useState<Order | null>(null);
   const [search, setSearch] = useState('');
   const [paymentSortDirection, setPaymentSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [page, setPage] = useState(1);
@@ -207,15 +206,17 @@ export function KitchenDisplayPage() {
     }
   }
 
-  async function handlePrintReceipt(order: Order) {
-    setPrintingOrderId(order.id);
+  async function handlePrintFromPreview() {
+    if (!receiptPreviewOrder) return;
+    setIsPrinting(true);
     try {
-      const blob = await fetchReceiptBlob(order.id);
+      const blob = await fetchReceiptBlob(receiptPreviewOrder.id);
       openReceiptBlob(blob);
+      setReceiptPreviewOrder(null);
     } catch (error) {
       showToast(getErrorMessage(error), 'error');
     } finally {
-      setPrintingOrderId(undefined);
+      setIsPrinting(false);
     }
   }
 
@@ -265,7 +266,7 @@ export function KitchenDisplayPage() {
         <p className="text-xs text-gray-400 dark:text-gray-500">Dashboard &gt; Orders</p>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+      <div className="overflow-visible rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
         <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 p-4 dark:border-gray-800">
           <input
             value={search}
@@ -284,10 +285,6 @@ export function KitchenDisplayPage() {
           </button>
         </div>
 
-        {/* No overflow-x-auto wrapper — that clips the Actions dropdown,
-            same bug fixed on the Users Accounts page. Six columns fit
-            comfortably on any realistic desktop width without needing
-            horizontal scroll. */}
         <table className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
@@ -337,9 +334,8 @@ export function KitchenDisplayPage() {
                       order={order}
                       onAdvance={() => handleAdvance(order)}
                       onCancel={() => handleCancel(order)}
-                      onPrintReceipt={() => handlePrintReceipt(order)}
+                      onOpenReceiptPreview={() => setReceiptPreviewOrder(order)}
                       isUpdating={updatingOrderId === order.id}
-                      isPrinting={printingOrderId === order.id}
                     />
                   </td>
                 </tr>
@@ -404,6 +400,13 @@ export function KitchenDisplayPage() {
           </div>
         </div>
       </div>
+
+      <ReceiptPreviewModal
+        order={receiptPreviewOrder}
+        onClose={() => setReceiptPreviewOrder(null)}
+        onPrint={handlePrintFromPreview}
+        isPrinting={isPrinting}
+      />
     </div>
   );
 }
