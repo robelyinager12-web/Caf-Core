@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Lock } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useLogin } from '../../hooks/useAuth';
@@ -11,24 +12,17 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useLogin();
   const showToast = useToastStore((state) => state.show);
+  const navigate = useNavigate();
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     loginMutation.mutate({ email, password });
   }
 
-  // Deliberately not functional: this system has no public signup or
-  // unverified password reset — accounts are created by an Admin/Manager
-  // (see Staff Management), and password resets go through Settings ->
-  // Change Password while logged in, or an Admin editing the account.
-  // These links exist for visual/UX parity with the requested design,
-  // pointing staff to the right real-world channel instead of a dead end.
+  // No unverified password reset exists yet — see Settings > Change
+  // Password for logged-in users, or an Admin can edit an account directly.
   function handleForgotPassword() {
     showToast('Contact your administrator to reset your password', 'error');
-  }
-
-  function handleRegisterHere() {
-    showToast('Accounts are created by an administrator — ask your manager for access', 'error');
   }
 
   return (
@@ -98,7 +92,7 @@ export function LoginPage() {
         Don't have an account?{' '}
         <button
           type="button"
-          onClick={handleRegisterHere}
+          onClick={() => navigate('/signup')}
           className="font-medium text-primary-600 hover:text-primary-700"
         >
           Register Here
