@@ -1,14 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { CreditCard, Receipt } from 'lucide-react';
+import { CreditCard, Printer } from 'lucide-react';
 import { getCategories, getMenuItems } from '../../services/menuService';
 import { createOrder } from '../../services/orderService';
-import { createPayment, fetchReceiptBlob, openReceiptBlob } from '../../services/paymentService';
+import { createPayment, fetchReceiptBlob, printReceiptBlob } from '../../services/paymentService';
 import { OrderForm } from '../../components/orders/OrderForm';
 import { Loader } from '../../components/common/Loader';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { PaymentForm } from '../../components/orders/PaymentForm';
+import { ReceiptPreviewModal } from '../../components/orders/ReceiptPreviewModal';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { useToastStore } from '../../components/common/Toast';
@@ -18,7 +19,8 @@ import { Order, PaymentMethod } from '../../types/order.types';
 export function NewOrderPage() {
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [isFetchingReceipt, setIsFetchingReceipt] = useState(false);
+  const [isReceiptPreviewOpen, setIsReceiptPreviewOpen] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
 
@@ -49,16 +51,17 @@ export function NewOrderPage() {
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
 
-  async function handleViewReceipt() {
+  async function handlePrintFromPreview() {
     if (!lastOrder) return;
-    setIsFetchingReceipt(true);
+    setIsPrinting(true);
     try {
       const blob = await fetchReceiptBlob(lastOrder.id);
-      openReceiptBlob(blob);
+      printReceiptBlob(blob);
+      setIsReceiptPreviewOpen(false);
     } catch (error) {
       showToast(getErrorMessage(error), 'error');
     } finally {
-      setIsFetchingReceipt(false);
+      setIsPrinting(false);
     }
   }
 
@@ -84,11 +87,10 @@ export function NewOrderPage() {
             ) : (
               <Button
                 variant="secondary"
-                onClick={handleViewReceipt}
-                isLoading={isFetchingReceipt}
+                onClick={() => setIsReceiptPreviewOpen(true)}
                 className="ml-2"
               >
-                <Receipt className="h-4 w-4" />
+                <Printer className="h-4 w-4" />
                 View Receipt
               </Button>
             )}
@@ -116,6 +118,13 @@ export function NewOrderPage() {
           />
         )}
       </Modal>
+
+      <ReceiptPreviewModal
+        order={isReceiptPreviewOpen ? lastOrder : null}
+        onClose={() => setIsReceiptPreviewOpen(false)}
+        onPrint={handlePrintFromPreview}
+        isPrinting={isPrinting}
+      />
     </div>
   );
 }
