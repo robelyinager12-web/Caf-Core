@@ -2,15 +2,16 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CreditCard,
-  Receipt,
+  Printer,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
 import { getOrders } from '../../services/orderService';
-import { createPayment, fetchReceiptBlob, openReceiptBlob } from '../../services/paymentService';
+import { createPayment, fetchReceiptBlob, printReceiptBlob } from '../../services/paymentService';
 import { PaymentForm } from '../../components/orders/PaymentForm';
+import { ReceiptPreviewModal } from '../../components/orders/ReceiptPreviewModal';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { Modal } from '../../components/common/Modal';
@@ -34,7 +35,8 @@ export function BillingPage() {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
-  const [receiptLoadingId, setReceiptLoadingId] = useState<string | null>(null);
+  const [receiptPreviewOrder, setReceiptPreviewOrder] = useState<Order | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
@@ -55,15 +57,17 @@ export function BillingPage() {
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
 
-  async function handleViewReceipt(orderId: string) {
-    setReceiptLoadingId(orderId);
+  async function handlePrintFromPreview() {
+    if (!receiptPreviewOrder) return;
+    setIsPrinting(true);
     try {
-      const blob = await fetchReceiptBlob(orderId);
-      openReceiptBlob(blob);
+      const blob = await fetchReceiptBlob(receiptPreviewOrder.id);
+      printReceiptBlob(blob);
+      setReceiptPreviewOrder(null);
     } catch (error) {
       showToast(getErrorMessage(error), 'error');
     } finally {
-      setReceiptLoadingId(null);
+      setIsPrinting(false);
     }
   }
 
@@ -124,7 +128,7 @@ export function BillingPage() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
+      <div className="overflow-visible rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
         <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 p-4 dark:border-gray-800">
           {FILTERS.map((f) => (
             <button
@@ -144,75 +148,72 @@ export function BillingPage() {
           ))}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-                <th className="px-4 py-3 font-medium">Order</th>
-                <th className="px-4 py-3 font-medium">Amount</th>
-                <th className="px-4 py-3 font-medium">Order Status</th>
-                <th className="px-4 py-3 font-medium">Payment</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              <th className="px-4 py-3 font-medium">Order</th>
+              <th className="px-4 py-3 font-medium">Amount</th>
+              <th className="px-4 py-3 font-medium">Order Status</th>
+              <th className="px-4 py-3 font-medium">Payment</th>
+              <th className="px-4 py-3 font-medium">Date</th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+            {pagedOrders.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                  No Results
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-              {pagedOrders.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-                    No Results
+            ) : (
+              pagedOrders.map((order) => (
+                <tr key={order.id}>
+                  <td
+                    className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100"
+                    title={order.orderNumber}
+                  >
+                    {shortOrderLabel(order.orderNumber)}
+                  </td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                    {formatCurrency(order.total)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <OrderStatusBadge status={order.status} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <PaymentStatusBadge payment={order.payment} />
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
+                    {formatDate(order.createdAt)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      {order.status !== 'CANCELLED' && !order.payment && (
+                        <button
+                          onClick={() => setPayingOrder(order)}
+                          className="flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700"
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          Take Payment
+                        </button>
+                      )}
+                      {order.payment && (
+                        <button
+                          onClick={() => setReceiptPreviewOrder(order)}
+                          className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                          Receipt
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
-              ) : (
-                pagedOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td
-                      className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100"
-                      title={order.orderNumber}
-                    >
-                      {shortOrderLabel(order.orderNumber)}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <OrderStatusBadge status={order.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <PaymentStatusBadge payment={order.payment} />
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
-                      {formatDate(order.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-2">
-                        {order.status !== 'CANCELLED' && !order.payment && (
-                          <button
-                            onClick={() => setPayingOrder(order)}
-                            className="flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700"
-                          >
-                            <CreditCard className="h-3.5 w-3.5" />
-                            Take Payment
-                          </button>
-                        )}
-                        {order.payment && (
-                          <button
-                            onClick={() => handleViewReceipt(order.id)}
-                            disabled={receiptLoadingId === order.id}
-                            className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                          >
-                            <Receipt className="h-3.5 w-3.5" />
-                            Receipt
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+              ))
+            )}
+          </tbody>
+        </table>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
           <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredOrders.length} rows.</p>
@@ -284,6 +285,13 @@ export function BillingPage() {
           />
         )}
       </Modal>
+
+      <ReceiptPreviewModal
+        order={receiptPreviewOrder}
+        onClose={() => setReceiptPreviewOrder(null)}
+        onPrint={handlePrintFromPreview}
+        isPrinting={isPrinting}
+      />
     </div>
   );
 }
