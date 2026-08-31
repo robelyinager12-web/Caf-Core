@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -41,11 +42,26 @@ export function MainLayout() {
 
   const visibleItems = NAV_ITEMS.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
+  // If the window is resized up to desktop width while the mobile sidebar
+  // is open, close it — otherwise isSidebarOpen stays true in the store
+  // and re-shrinking the window back down would show the sidebar already
+  // open with no click needed, which is confusing. The 1024px breakpoint
+  // matches Tailwind's `lg` used everywhere else in this layout.
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 1024 && isSidebarOpen) {
+        closeSidebar();
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen, closeSidebar]);
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-30 flex w-64 transform flex-col bg-white shadow-sm ring-1 ring-gray-200 transition-transform dark:bg-gray-900 dark:ring-gray-800',
+          'fixed inset-y-0 left-0 z-30 flex w-64 transform flex-col bg-white shadow-sm ring-1 ring-gray-200 transition-transform duration-200 ease-in-out dark:bg-gray-900 dark:ring-gray-800',
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -85,13 +101,26 @@ export function MainLayout() {
         </div>
       </aside>
 
+      {/* Backdrop — only rendered when the sidebar is actually open, so it
+          never intercepts clicks on desktop where the sidebar is always
+          visible via lg:translate-x-0 regardless of isSidebarOpen. */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={closeSidebar} />
+        <div
+          className="fixed inset-0 z-20 bg-black/30 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
       )}
 
       <div className="flex min-h-screen flex-col lg:ml-64">
         <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
-          <button onClick={toggleSidebar} className="rounded-lg p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isSidebarOpen}
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+          >
             <MenuIcon className="h-5 w-5" />
           </button>
 
