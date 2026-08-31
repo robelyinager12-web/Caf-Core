@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { signup } from '../../services/authService';
 import { getErrorMessage } from '../../utils/validators';
@@ -42,19 +42,19 @@ export function SignupPage() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Create an account</h2>
-      <p className="-mt-2 text-xs text-gray-400 dark:text-gray-500">
-        New accounts are created as Cashier. Ask an admin to change your role later if needed.
-      </p>
+      <h2 className="text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Create an Account
+      </h2>
 
       <div className="flex flex-col gap-1">
         <label htmlFor="fullName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Full Name
+          Business Name
         </label>
         <input
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+          placeholder="Business Name"
           required
           autoFocus
           className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -70,6 +70,7 @@ export function SignupPage() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
           required
           className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
         />
@@ -85,6 +86,7 @@ export function SignupPage() {
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
             required
             className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
           />
@@ -111,18 +113,17 @@ export function SignupPage() {
         disabled={passwordIssues.length > 0}
         className="w-full"
       >
-        <UserPlus className="h-4 w-4" />
-        Create Account
+        Register
       </Button>
 
       <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-        Already have an account?{' '}
+        Already have account?{' '}
         <button
           type="button"
           onClick={() => navigate('/login')}
           className="font-medium text-primary-600 hover:text-primary-700"
         >
-          Sign in
+          Login Here
         </button>
       </p>
     </form>
