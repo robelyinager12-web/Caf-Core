@@ -9,19 +9,22 @@ import {
   MoreHorizontal,
   ArrowRight,
   Printer,
+  CreditCard,
   XCircle,
 } from 'lucide-react';
 import { getOrders, updateOrderStatus } from '../../services/orderService';
-import { fetchReceiptBlob, printReceiptBlob } from '../../services/paymentService';
+import { createPayment, fetchReceiptBlob, printReceiptBlob } from '../../services/paymentService';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
+import { PaymentForm } from '../../components/orders/PaymentForm';
 import { ReceiptPreviewModal } from '../../components/orders/ReceiptPreviewModal';
+import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
 import { useSocket } from '../../hooks/useSocket';
 import { useToastStore } from '../../components/common/Toast';
 import { getErrorMessage } from '../../utils/validators';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { Order, OrderStatus } from '../../types/order.types';
+import { Order, OrderStatus, PaymentMethod } from '../../types/order.types';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'PREPARING', 'READY'];
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
@@ -50,12 +53,14 @@ function OrderActionsMenu({
   onAdvance,
   onCancel,
   onOpenReceiptPreview,
+  onOpenPayment,
   isUpdating,
 }: {
   order: Order;
   onAdvance: () => void;
   onCancel: () => void;
   onOpenReceiptPreview: () => void;
+  onOpenPayment: () => void;
   isUpdating: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -71,6 +76,7 @@ function OrderActionsMenu({
 
   const nextLabel = NEXT_LABEL[order.status];
   const canCancel = order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
+  const isUnpaid = !order.payment && order.status !== 'CANCELLED';
 
   return (
     <div className="relative flex justify-end" ref={ref}>
@@ -86,20 +92,6 @@ function OrderActionsMenu({
         <div className="absolute right-0 top-9 z-50 w-48 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
           <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">Actions</p>
 
-          {order.payment && (
-            <button
-              type="button"
-              onClick={() => {
-                onOpenReceiptPreview();
-                setIsOpen(false);
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
-            >
-              <Printer className="h-4 w-4 text-gray-400" />
-              Print Receipt
-            </button>
-          )}
-
           {nextLabel && (
             <button
               type="button"
@@ -112,6 +104,34 @@ function OrderActionsMenu({
             >
               <ArrowRight className="h-4 w-4 text-gray-400" />
               {nextLabel}
+            </button>
+          )}
+
+          {isUnpaid && (
+            <button
+              type="button"
+              onClick={() => {
+                onOpenPayment();
+                setIsOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <CreditCard className="h-4 w-4 text-gray-400" />
+              Pay Order
+            </button>
+          )}
+
+          {order.payment && (
+            <button
+              type="button"
+              onClick={() => {
+                onOpenReceiptPreview();
+                setIsOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <Printer className="h-4 w-4 text-gray-400" />
+              Print Receipt
             </button>
           )}
 
@@ -143,6 +163,7 @@ export function KitchenDisplayPage() {
   const [updatingOrderId, setUpdatingOrderId] = useState<string | undefined>();
   const [isPrinting, setIsPrinting] = useState(false);
   const [receiptPreviewOrder, setReceiptPreviewOrder] = useState<Order | null>(null);
+  const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [search, setSearch] = useState('');
   const [paymentSortDirection, setPaymentSortDirection] = useState<'asc' | 'desc' | null>(null);
   const [page, setPage] = useState(1);
@@ -193,6 +214,20 @@ export function KitchenDisplayPage() {
       setUpdatingOrderId(undefined);
       queryClient.invalidateQueries({ queryKey: ['kitchen-orders'] });
     },
+  });
+
+  const paymentMutation = useMutation({
+    mutationFn: (payload: { method: PaymentMethod; amount: number }) =>
+      createPayment({ orderId: payingOrder!.id, ...payload }),
+    onSuccess: (payment) => {
+      setOrders((prev) =>
+        prev.map((o) => (o.id === payingOrder!.id ? { ...o, payment } : o))
+      );
+      showToast('Payment recorded successfully');
+      setPayingOrder(null);
+      queryClient.invalidateQueries({ queryKey: ['kitchen-orders'] });
+    },
+    onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
 
   function handleAdvance(order: Order) {
@@ -335,6 +370,7 @@ export function KitchenDisplayPage() {
                       onAdvance={() => handleAdvance(order)}
                       onCancel={() => handleCancel(order)}
                       onOpenReceiptPreview={() => setReceiptPreviewOrder(order)}
+                      onOpenPayment={() => setPayingOrder(order)}
                       isUpdating={updatingOrderId === order.id}
                     />
                   </td>
@@ -400,6 +436,20 @@ export function KitchenDisplayPage() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={!!payingOrder}
+        onClose={() => setPayingOrder(null)}
+        title={`Pay Order — ${payingOrder?.orderNumber ?? ''}`}
+      >
+        {payingOrder && (
+          <PaymentForm
+            orderTotal={payingOrder.total}
+            onSubmit={(payload) => paymentMutation.mutate(payload)}
+            isSubmitting={paymentMutation.isPending}
+          />
+        )}
+      </Modal>
 
       <ReceiptPreviewModal
         order={receiptPreviewOrder}
