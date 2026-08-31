@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { SignupPage } from '../pages/auth/SignupPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loader } from '../components/common/Loader';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
@@ -51,6 +52,7 @@ export function AppRouter() {
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
