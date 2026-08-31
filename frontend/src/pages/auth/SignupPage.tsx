@@ -41,13 +41,13 @@ export function SignupPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <h2 className="text-center text-lg font-semibold text-gray-900 dark:text-gray-100">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <h2 className="text-center text-base font-semibold text-gray-900 dark:text-gray-100">
         Create an Account
       </h2>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="fullName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor="fullName" className="text-xs font-medium text-gray-700 dark:text-gray-300">
           Business Name
         </label>
         <input
@@ -57,12 +57,12 @@ export function SignupPage() {
           placeholder="Business Name"
           required
           autoFocus
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor="email" className="text-xs font-medium text-gray-700 dark:text-gray-300">
           Email
         </label>
         <input
@@ -72,12 +72,12 @@ export function SignupPage() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Email"
           required
-          className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
         />
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor="password" className="text-xs font-medium text-gray-700 dark:text-gray-300">
           Password
         </label>
         <div className="relative">
@@ -88,7 +88,7 @@ export function SignupPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
             required
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-10 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-9 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
           />
           <button
             type="button"
@@ -96,14 +96,15 @@ export function SignupPage() {
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
             tabIndex={-1}
           >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </button>
         </div>
-        <p className="text-xs text-gray-400 dark:text-gray-500">
-          Must be at least 8 characters, with an uppercase letter and a number.
-        </p>
-        {passwordIssues.length > 0 && (
-          <p className="text-xs text-danger">Still needs: {passwordIssues.join(', ')}</p>
+        {password && (
+          <p className="text-[11px] text-gray-400 dark:text-gray-500">
+            {passwordIssues.length > 0
+              ? `Still needs: ${passwordIssues.join(', ')}`
+              : 'Looks good.'}
+          </p>
         )}
       </div>
 
@@ -111,7 +112,7 @@ export function SignupPage() {
         type="submit"
         isLoading={signupMutation.isPending}
         disabled={passwordIssues.length > 0}
-        className="w-full"
+        className="mt-1 w-full"
       >
         Register
       </Button>
