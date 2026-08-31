@@ -12,7 +12,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { getOrders, updateOrderStatus } from '../../services/orderService';
-import { fetchReceiptBlob, openReceiptBlob } from '../../services/paymentService';
+import { fetchReceiptBlob, printReceiptBlob } from '../../services/paymentService';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { ReceiptPreviewModal } from '../../components/orders/ReceiptPreviewModal';
@@ -211,7 +211,7 @@ export function KitchenDisplayPage() {
     setIsPrinting(true);
     try {
       const blob = await fetchReceiptBlob(receiptPreviewOrder.id);
-      openReceiptBlob(blob);
+      printReceiptBlob(blob);
       setReceiptPreviewOrder(null);
     } catch (error) {
       showToast(getErrorMessage(error), 'error');
