@@ -3,15 +3,11 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { prisma } from '../../config/db';
 import { env } from '../../config/env';
 import { AppError } from '../../middlewares/errorHandler';
-import { LoginInput, RegisterInput, ChangePasswordInput } from './auth.validation';
+import { LoginInput, RegisterInput, PublicSignupInput, ChangePasswordInput } from './auth.validation';
 import { Role } from '@prisma/client';
 
 const SALT_ROUNDS = 12;
 
-// A pre-computed hash of a value nobody will ever actually enter, used to
-// burn the same bcrypt.compare() time when a user doesn't exist — otherwise
-// "unknown email" responds faster than "wrong password", leaking which
-// emails are registered via a timing side-channel.
 const DUMMY_HASH = '$2b$12$CwTycUXWue0Thq9StjUM0uJ8Rri8ByfSA0AhVvTAyOJb0dxfmDcXW';
 
 interface TokenPayload {
@@ -45,6 +41,40 @@ export async function registerUser(input: RegisterInput) {
       email: input.email,
       passwordHash,
       role: input.role,
+    },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+
+  return user;
+}
+
+/**
+ * Public self-signup — unauthenticated, no invitation needed. Always
+ * creates the account as CASHIER regardless of anything in the request;
+ * the role is hardcoded here, not read from input, since PublicSignupInput
+ * has no role field to begin with (defense in depth with the schema).
+ */
+export async function publicSignup(input: PublicSignupInput) {
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) {
+    throw new AppError('A user with this email already exists', 409);
+  }
+
+  const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
+
+  const user = await prisma.user.create({
+    data: {
+      fullName: input.fullName,
+      email: input.email,
+      passwordHash,
+      role: 'CASHIER',
     },
     select: {
       id: true,

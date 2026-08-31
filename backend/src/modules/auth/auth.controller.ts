@@ -1,6 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { loginSchema, registerSchema, refreshTokenSchema, changePasswordSchema } from './auth.validation';
-import { registerUser, loginUser, refreshAccessToken, changePassword } from './auth.service';
+import {
+  loginSchema,
+  registerSchema,
+  publicSignupSchema,
+  refreshTokenSchema,
+  changePasswordSchema,
+} from './auth.validation';
+import {
+  registerUser,
+  publicSignup,
+  loginUser,
+  refreshAccessToken,
+  changePassword,
+} from './auth.service';
 import { sendSuccess } from '../../utils/apiResponse';
 import { logAudit } from '../audit/audit.service';
 import { AuthenticatedRequest } from './auth.middleware';
@@ -20,6 +32,25 @@ export async function register(req: Request, res: Response, next: NextFunction) 
     });
 
     sendSuccess(res, 201, { message: 'User registered successfully', data: user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function signup(req: Request, res: Response, next: NextFunction) {
+  try {
+    const input = publicSignupSchema.parse(req.body);
+    const user = await publicSignup(input);
+
+    await logAudit({
+      userId: null,
+      action: 'USER_SELF_SIGNUP',
+      entityType: 'User',
+      entityId: user.id,
+      metadata: { email: user.email },
+    });
+
+    sendSuccess(res, 201, { message: 'Account created successfully', data: user });
   } catch (error) {
     next(error);
   }
