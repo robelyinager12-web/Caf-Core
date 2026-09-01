@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Coffee, DollarSign, ClipboardList, Clock3, Calendar, ChevronDown } from 'lucide-react';
+import { Coffee, DollarSign, ClipboardList, Clock3 } from 'lucide-react';
 import { getSalesSummary, getTopItems } from '../../services/reportService';
 import { getMenuItems } from '../../services/menuService';
 import { getOrders } from '../../services/orderService';
@@ -10,6 +10,7 @@ import { Loader } from '../../components/common/Loader';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { SalesChart } from '../../components/reports/SalesChart';
+import { DateRangePicker } from '../../components/common/DateRangePicker';
 
 function todayRange() {
   const now = new Date();
@@ -48,78 +49,6 @@ function StatCard({ label, value, subtext, icon: Icon }: StatCardProps) {
 function shortOrderLabel(orderNumber: string): string {
   const parts = orderNumber.split('-');
   return parts.length === 3 ? `#${parts[2]}` : orderNumber;
-}
-
-interface DateRangePickerProps {
-  from: string;
-  to: string;
-  onApply: (from: string, to: string) => void;
-}
-
-function DateRangePicker({ from, to, onApply }: DateRangePickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [fromInput, setFromInput] = useState(from.slice(0, 10));
-  const [toInput, setToInput] = useState(to.slice(0, 10));
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  function handleApply() {
-    onApply(toISODateStart(new Date(fromInput)), toISODateEnd(new Date(toInput)));
-    setIsOpen(false);
-  }
-
-  return (
-    <div className="relative" ref={containerRef}>
-      <button
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-medium text-gray-600 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:ring-gray-800 dark:hover:bg-gray-800"
-      >
-        <Calendar className="h-3.5 w-3.5 text-gray-400" />
-        {formatDateOnly(from)} - {formatDateOnly(to)}
-        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-72 rounded-xl bg-white p-4 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-600 dark:text-gray-300">From</label>
-              <input
-                type="date"
-                value={fromInput}
-                onChange={(e) => setFromInput(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-600 dark:text-gray-300">To</label>
-              <input
-                type="date"
-                value={toInput}
-                onChange={(e) => setToInput(e.target.value)}
-                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-              />
-            </div>
-            <button
-              onClick={handleApply}
-              className="mt-1 w-full rounded-lg bg-primary-600 px-3 py-2 text-sm font-medium text-white hover:bg-primary-700"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 export function DashboardPage() {
