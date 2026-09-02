@@ -1,8 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, Download, Search, ImageOff, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import clsx from 'clsx';
+import { Plus, Download, Search, ImageOff, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers } from 'lucide-react';
 import { MenuItemForm } from '../../components/menu/MenuItemForm';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
@@ -146,6 +145,15 @@ export function ItemsManagementPage() {
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
+            <Link
+              to="/items/categories"
+              className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <Layers className="h-4 w-4" />
+              Categories
+            </Link>
+          )}
+          {canManage && (
             <Button
               onClick={() => {
                 setEditingItem(undefined);
@@ -235,17 +243,11 @@ export function ItemsManagementPage() {
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900 dark:text-gray-100">{item.name}</p>
-                      <span
-                        className={clsx(
-                          'text-xs',
-                          item.isAvailable ? 'text-success' : 'text-gray-400 dark:text-gray-500'
-                        )}
-                      >
-                        {item.isAvailable ? 'Available' : 'Unavailable'}
-                      </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                      {item.category?.name ?? '—'}
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        {item.category?.name ?? '—'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                       {formatCurrency(item.price)}
