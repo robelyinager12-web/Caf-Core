@@ -42,11 +42,6 @@ export function MainLayout() {
 
   const visibleItems = NAV_ITEMS.filter((item) => !item.roles || (user && item.roles.includes(user.role)));
 
-  // If the window is resized up to desktop width while the mobile sidebar
-  // is open, close it — otherwise isSidebarOpen stays true in the store
-  // and re-shrinking the window back down would show the sidebar already
-  // open with no click needed, which is confusing. The 1024px breakpoint
-  // matches Tailwind's `lg` used everywhere else in this layout.
   useEffect(() => {
     function handleResize() {
       if (window.innerWidth >= 1024 && isSidebarOpen) {
@@ -101,9 +96,6 @@ export function MainLayout() {
         </div>
       </aside>
 
-      {/* Backdrop — only rendered when the sidebar is actually open, so it
-          never intercepts clicks on desktop where the sidebar is always
-          visible via lg:translate-x-0 regardless of isSidebarOpen. */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 lg:hidden"
@@ -114,17 +106,24 @@ export function MainLayout() {
 
       <div className="flex min-h-screen flex-col lg:ml-64">
         <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
+          {/* lg:hidden — this button only exists for the small-screen
+              off-canvas sidebar. On large screens the sidebar is always
+              visible (isSidebarOpen is irrelevant there, since
+              lg:translate-x-0 forces it open regardless), so showing a
+              toggle button there would be functionally useless and
+              confusing. justify-end on the header below fills the gap
+              this leaves on desktop. */}
           <button
             type="button"
             onClick={toggleSidebar}
             aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={isSidebarOpen}
-            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:active:bg-gray-700"
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 active:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-800 dark:active:bg-gray-700 lg:hidden"
           >
             <MenuIcon className="h-5 w-5" />
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-1 items-center justify-end gap-2">
             <ThemeToggle />
             <NotificationBell />
             <ShiftClockWidget />
