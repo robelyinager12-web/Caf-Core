@@ -48,4 +48,5 @@ export interface CartLine {
   name: string;
   price: number;
   quantity: number;
+  imageUrl?: string;
 }

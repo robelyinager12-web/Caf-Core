@@ -17,6 +17,11 @@ interface OrderFormProps {
   isSubmitting: boolean;
 }
 
+function cartImageSrc(imageUrl?: string): string | undefined {
+  if (!imageUrl) return undefined;
+  return `${import.meta.env.VITE_SOCKET_URL}${imageUrl}`;
+}
+
 export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: OrderFormProps) {
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -45,7 +50,16 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
           l.menuItemId === item.id ? { ...l, quantity: l.quantity + 1 } : l
         );
       }
-      return [...prev, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
+      return [
+        ...prev,
+        {
+          menuItemId: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1,
+          imageUrl: item.imageUrl,
+        },
+      ];
     });
   }
 
@@ -77,7 +91,7 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
   }
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
       <div className="flex min-w-0 flex-1 flex-col gap-4">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -112,7 +126,7 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
                   <div className="aspect-[4/3] w-full bg-gray-100 dark:bg-gray-800">
                     {item.imageUrl ? (
                       <img
-                        src={`${import.meta.env.VITE_SOCKET_URL}${item.imageUrl}`}
+                        src={cartImageSrc(item.imageUrl)}
                         alt={item.name}
                         loading="lazy"
                         className="h-full w-full object-cover"
@@ -188,21 +202,44 @@ export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: Ord
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
         />
 
-        <div className="flex min-h-[120px] flex-1 flex-col gap-2 overflow-y-auto">
+        {/* flex-1 + min-h-0 lets this list grow to fill the remaining
+            height of the cart panel (which now matches the menu grid's
+            height via items-stretch on the parent), instead of only being
+            as tall as its own content. min-h-0 is required alongside
+            flex-1 in a flex column for the overflow-y-auto below to
+            actually kick in rather than the panel growing unbounded. */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
           {cartIsEmpty ? (
             <div className="flex flex-1 items-center justify-center py-10">
               <p className="text-sm text-gray-400 dark:text-gray-500">Cart is Empty</p>
             </div>
           ) : (
             cart.map((line) => (
-              <div key={line.menuItemId} className="flex items-center justify-between gap-2 text-sm">
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800 dark:text-gray-200">{line.name}</p>
+              <div key={line.menuItemId} className="flex items-center gap-3 text-sm">
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                  {line.imageUrl ? (
+                    <img
+                      src={cartImageSrc(line.imageUrl)}
+                      alt={line.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ImageOff className="h-4 w-4 text-gray-300" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-gray-800 dark:text-gray-200">
+                    {line.name}
+                  </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatCurrency(line.price)} each
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
+
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => updateQuantity(line.menuItemId, -1)}
