@@ -87,10 +87,13 @@ export async function createOrder(input: CreateOrderInput, userId: string) {
     });
   });
 
+  // Broadcast to everyone (targetRole omitted = null = all roles) rather
+  // than Kitchen only — Cashiers and Admins/Managers placing or nearby
+  // also benefit from seeing order activity in their own notification
+  // bell, not just kitchen staff preparing it.
   await createNotification({
     type: 'NEW_ORDER',
     message: `New order ${order.orderNumber} received`,
-    targetRole: 'KITCHEN',
   });
 
   emitOrderEvent('order:created', order);
