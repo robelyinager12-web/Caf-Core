@@ -41,6 +41,12 @@ const AuditLogPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('../pages/settings/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
+const AccountPage = lazy(() =>
+  import('../pages/account/AccountPage').then((m) => ({ default: m.AccountPage }))
+);
+const NotificationsPage = lazy(() =>
+  import('../pages/notifications/NotificationsPage').then((m) => ({ default: m.NotificationsPage }))
+);
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<Loader label="Loading page..." />}>{children}</Suspense>;
@@ -80,6 +86,22 @@ export function AppRouter() {
               element={
                 <LazyPage>
                   <SettingsPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/account"
+              element={
+                <LazyPage>
+                  <AccountPage />
+                </LazyPage>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <LazyPage>
+                  <NotificationsPage />
                 </LazyPage>
               }
             />

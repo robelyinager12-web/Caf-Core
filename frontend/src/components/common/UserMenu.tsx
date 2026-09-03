@@ -67,7 +67,7 @@ export function UserMenu() {
 
           <div className="flex flex-col pt-1">
             <button
-              onClick={() => goTo('/settings')}
+              onClick={() => goTo('/account')}
               className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               <User className="h-4 w-4 text-gray-400" />
@@ -81,7 +81,7 @@ export function UserMenu() {
               Billing
             </button>
             <button
-              onClick={() => goTo('/settings')}
+              onClick={() => goTo('/notifications')}
               className="flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
             >
               <Bell className="h-4 w-4 text-gray-400" />
