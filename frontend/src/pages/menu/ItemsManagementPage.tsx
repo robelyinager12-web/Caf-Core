@@ -22,6 +22,10 @@ import { getErrorMessage } from '../../utils/validators';
 
 const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
 
+function escapeCsvCell(cell: string): string {
+  return /[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell;
+}
+
 function exportToCsv(items: MenuItem[]) {
   const headers = ['Title', 'Category', 'Price', 'Available'];
   const rows = items.map((item) => [
@@ -30,13 +34,17 @@ function exportToCsv(items: MenuItem[]) {
     item.price.toFixed(2),
     item.isAvailable ? 'Yes' : 'No',
   ]);
-  const escapeCell = (cell: string) => (/[",\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell);
-  const csv = [headers, ...rows].map((row) => row.map(escapeCell).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+  const csv = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+
+  // Prepend a UTF-8 BOM so Excel (Windows) correctly detects the encoding
+  // and renders accented characters (e.g. item names with é, ñ) instead of
+  // showing mojibake — a common gotcha with plain UTF-8 CSVs opened in Excel.
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'items.csv';
+  link.download = `items-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -132,6 +140,15 @@ export function ItemsManagementPage() {
     }
   }
 
+  function handleExport() {
+    if (filteredItems.length === 0) {
+      showToast('No items to export', 'error');
+      return;
+    }
+    exportToCsv(filteredItems);
+    showToast(`Exported ${filteredItems.length} item${filteredItems.length === 1 ? '' : 's'}`);
+  }
+
   if (categoriesQuery.isLoading || menuItemsQuery.isLoading) {
     return <Loader label="Loading items..." />;
   }
@@ -165,7 +182,8 @@ export function ItemsManagementPage() {
             </Button>
           )}
           <button
-            onClick={() => exportToCsv(filteredItems)}
+            type="button"
+            onClick={handleExport}
             disabled={filteredItems.length === 0}
             className="flex items-center gap-1.5 rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
