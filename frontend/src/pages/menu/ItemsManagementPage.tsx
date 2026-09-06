@@ -37,9 +37,6 @@ function exportToCsv(items: MenuItem[]) {
 
   const csv = [headers, ...rows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
 
-  // Prepend a UTF-8 BOM so Excel (Windows) correctly detects the encoding
-  // and renders accented characters (e.g. item names with é, ñ) instead of
-  // showing mojibake — a common gotcha with plain UTF-8 CSVs opened in Excel.
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -141,6 +138,10 @@ export function ItemsManagementPage() {
   }
 
   function handleExport() {
+    // TEMPORARY DEBUG LINE — confirms whether the click handler fires at
+    // all. Remove this once export is confirmed working.
+    alert('Export clicked. Item count: ' + filteredItems.length);
+
     if (filteredItems.length === 0) {
       showToast('No items to export', 'error');
       return;
@@ -158,12 +159,12 @@ export function ItemsManagementPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Items</h1>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Dashboard &gt; Items</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Dashboard &gt; Menu &gt; Menu Items</p>
         </div>
         <div className="flex items-center gap-2">
           {canManage && (
             <Link
-              to="/items/categories"
+              to="/menu/categories"
               className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               <Layers className="h-4 w-4" />
@@ -184,8 +185,7 @@ export function ItemsManagementPage() {
           <button
             type="button"
             onClick={handleExport}
-            disabled={filteredItems.length === 0}
-            className="flex items-center gap-1.5 rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800"
           >
             <Download className="h-4 w-4" />
             Export List
