@@ -65,8 +65,12 @@ export function AppRouter() {
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
 
+            {/* Menu section — Categories and Menu Items are now proper
+                nested siblings under /menu/*, replacing the earlier flat
+                /items and /items/categories paths. Old paths redirect
+                below so any bookmarks/history don't 404. */}
             <Route
-              path="/items"
+              path="/menu/items"
               element={
                 <LazyPage>
                   <ItemsManagementPage />
@@ -74,13 +78,14 @@ export function AppRouter() {
               }
             />
             <Route
-              path="/items/categories"
+              path="/menu/categories"
               element={
                 <LazyPage>
                   <CategoryManagementPage />
                 </LazyPage>
               }
             />
+
             <Route
               path="/settings"
               element={
@@ -107,8 +112,11 @@ export function AppRouter() {
             />
 
             <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'CASHIER']} />}>
+              {/* "New Order" moved from the old /menu path to /orders/new,
+                  since /menu is now the menu-management section, not the
+                  ordering screen. */}
               <Route
-                path="/menu"
+                path="/orders/new"
                 element={
                   <LazyPage>
                     <NewOrderPage />
@@ -161,6 +169,9 @@ export function AppRouter() {
                   </LazyPage>
                 }
               />
+            </Route>
+
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'CASHIER']} />}>
               <Route
                 path="/reports"
                 element={
@@ -183,6 +194,12 @@ export function AppRouter() {
             </Route>
           </Route>
         </Route>
+
+        {/* Legacy path redirects — anything bookmarked or linked to the
+            pre-restructure URLs still resolves correctly. */}
+        <Route path="/items" element={<Navigate to="/menu/items" replace />} />
+        <Route path="/items/categories" element={<Navigate to="/menu/categories" replace />} />
+        <Route path="/menu" element={<Navigate to="/orders/new" replace />} />
 
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
