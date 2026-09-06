@@ -171,7 +171,7 @@ export function AppRouter() {
               />
             </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'CASHIER']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
               <Route
                 path="/reports"
                 element={
