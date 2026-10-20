@@ -5,7 +5,7 @@ import { getSalesSummary, getTopItems } from '../../services/reportService';
 import { getMenuItems } from '../../services/menuService';
 import { getOrders } from '../../services/orderService';
 import { formatCurrency } from '../../utils/formatCurrency';
-import { formatDate, formatDateOnly, toISODateStart, toISODateEnd } from '../../utils/formatDate';
+import { formatDateOnly, toISODateStart, toISODateEnd } from '../../utils/formatDate';
 import { Loader } from '../../components/common/Loader';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';

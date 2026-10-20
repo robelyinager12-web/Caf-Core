@@ -12,6 +12,14 @@ interface StaffFormProps {
 
 const ROLES: Role[] = ['ADMIN', 'MANAGER', 'CASHIER', 'KITCHEN'];
 
+function getPasswordIssues(password: string): string[] {
+  const issues: string[] = [];
+  if (password.length < 8) issues.push('at least 8 characters');
+  if (!/[A-Z]/.test(password)) issues.push('an uppercase letter');
+  if (!/[0-9]/.test(password)) issues.push('a number');
+  return issues;
+}
+
 export function StaffForm({ initialUser, isSelf, onSubmit, isSubmitting }: StaffFormProps) {
   const [fullName, setFullName] = useState(initialUser?.fullName ?? '');
   const [email, setEmail] = useState(initialUser?.email ?? '');
@@ -26,13 +34,11 @@ export function StaffForm({ initialUser, isSelf, onSubmit, isSubmitting }: Staff
     }
   }, [initialUser]);
 
+  const passwordIssues = !initialUser && password ? getPasswordIssues(password) : [];
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (initialUser) {
-      // Email is intentionally NOT sent on update — the backend's
-      // PATCH /users/:id does not accept email changes (it doubles as the
-      // login credential, so changing it needs its own verification flow).
-      // The field is shown read-only below purely for reference/context.
       onSubmit({ fullName, role: isSelf ? undefined : role });
     } else {
       onSubmit({ fullName, email, password, role });
@@ -52,14 +58,24 @@ export function StaffForm({ initialUser, isSelf, onSubmit, isSubmitting }: Staff
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <Input
-            label="Temporary Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-          />
+          <div className="flex flex-col gap-1">
+            <Input
+              label="Temporary Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Must be at least 8 characters, with an uppercase letter and a number.
+            </p>
+            {passwordIssues.length > 0 && (
+              <p className="text-xs text-danger">
+                Still needs: {passwordIssues.join(', ')}
+              </p>
+            )}
+          </div>
         </>
       ) : (
         <div className="flex flex-col gap-1">
@@ -97,7 +113,12 @@ export function StaffForm({ initialUser, isSelf, onSubmit, isSubmitting }: Staff
         )}
       </div>
 
-      <Button type="submit" isLoading={isSubmitting} className="mt-2">
+      <Button
+        type="submit"
+        isLoading={isSubmitting}
+        disabled={!initialUser && passwordIssues.length > 0}
+        className="mt-2"
+      >
         {initialUser ? 'Update' : 'Create Staff Account'}
       </Button>
     </form>

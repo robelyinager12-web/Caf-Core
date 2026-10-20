@@ -23,6 +23,7 @@ import auditRoutes from './modules/audit/audit.routes';
 
 export function createApp(): Application {
   const app = express();
+  app.set('trust proxy', 1);
 
   app.use(
     helmet({

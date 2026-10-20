@@ -1,6 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Sun, Moon, Bell, KeyRound } from 'lucide-react';
+import { Sun, Moon, KeyRound } from 'lucide-react';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { useThemeStore } from '../../store/themeStore';
