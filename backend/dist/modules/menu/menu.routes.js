@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const menu_controller_1 = require("./menu.controller");
+const auth_middleware_1 = require("../auth/auth.middleware");
+const uploadHandler_1 = require("../../middlewares/uploadHandler");
+const cacheControl_1 = require("../../middlewares/cacheControl");
+const router = (0, express_1.Router)();
+router.get('/', auth_middleware_1.authenticate, (0, cacheControl_1.cacheFor)(30), menu_controller_1.getMenuItems);
+router.get('/:id', auth_middleware_1.authenticate, (0, cacheControl_1.cacheFor)(30), menu_controller_1.getMenuItem);
+router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)('ADMIN', 'MANAGER'), uploadHandler_1.uploadMenuImage.single('image'), menu_controller_1.postMenuItem);
+router.patch('/:id', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)('ADMIN', 'MANAGER'), uploadHandler_1.uploadMenuImage.single('image'), menu_controller_1.patchMenuItem);
+router.delete('/:id', auth_middleware_1.authenticate, (0, auth_middleware_1.authorize)('ADMIN', 'MANAGER'), menu_controller_1.removeMenuItem);
+exports.default = router;
