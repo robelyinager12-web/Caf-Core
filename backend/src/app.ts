@@ -1,13 +1,16 @@
+
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import path from 'path';
+
 import { env } from './config/env';
 import { errorHandler } from './middlewares/errorHandler';
 import { globalRateLimiter } from './middlewares/rateLimiter';
 import { sanitizeInput } from './middlewares/sanitizeInput';
 import { logger } from './utils/logger';
+
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/user.routes';
 import categoryRoutes from './modules/categories/category.routes';
@@ -23,7 +26,28 @@ import auditRoutes from './modules/audit/audit.routes';
 
 export function createApp(): Application {
   const app = express();
+
   app.set('trust proxy', 1);
+
+  const allowedOrigins = [
+    'http://localhost:5173',
+    env.clientUrl.replace(/\/$/, ''),
+  ];
+
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+          callback(null, true);
+        } else {
+          callback(new Error(`CORS blocked origin: ${origin}`));
+        }
+      },
+      credentials: true,
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+  );
 
   app.use(
     helmet({
@@ -33,33 +57,31 @@ export function createApp(): Application {
           imgSrc: ["'self'", 'data:'],
           scriptSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          connectSrc: ["'self'", env.clientUrl],
+          connectSrc: ["'self'", ...allowedOrigins],
         },
       },
-      crossOriginResourcePolicy: { policy: 'cross-origin' }, // required so
-      // uploaded menu-item images can be embedded by the frontend origin
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
     })
   );
+
   app.use(compression());
-  app.use(
-    cors({
-      origin: env.clientUrl,
-      credentials: true,
-      methods: ['GET', 'POST', 'PATCH', 'DELETE'], // explicit allow-list —
-      // no PUT/OPTIONS-adjacent surprises; matches exactly what this API
-      // actually exposes across every module built in Phase 6
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    })
-  );
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: true }));
   app.use(sanitizeInput);
   app.use(globalRateLimiter);
 
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), { maxAge: '7d' }));
+  app.use(
+    '/uploads',
+    express.static(path.join(__dirname, '..', 'uploads'), {
+      maxAge: '7d',
+    })
+  );
 
   app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+    });
   });
 
   app.use('/api/auth', authRoutes);
@@ -76,11 +98,15 @@ export function createApp(): Application {
   app.use('/api/audit', auditRoutes);
 
   app.use((req, res) => {
-    res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+    res.status(404).json({
+      success: false,
+      message: `Route ${req.originalUrl} not found`,
+    });
   });
 
   app.use(errorHandler);
 
   logger.info('Express application configured');
+
   return app;
 }
