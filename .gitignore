@@ -1,12 +1,10 @@
-# Environment
-.env
-*.env
+# Backend build output
+backend/dist/
 
 # Dependencies
 node_modules/
 
-# Generated uploads
-backend/uploads/
-
-# Logs
-*.log
+# Environment variables
+.env
+.env.*
+!.env.example
