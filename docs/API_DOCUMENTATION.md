@@ -26,39 +26,40 @@ Errors:
 | Method | Path | Access | Description |
 |---|---|---|---|
 | POST | `/auth/login` | Public | Returns access + refresh tokens |
-| POST | `/auth/register` | Admin, Manager | Creates a new staff account |
+| POST | `/auth/register` | Admin | Creates a new staff account with an assigned role |
 | POST | `/auth/refresh` | Public (valid refresh token) | Issues a new access token |
+| POST | `/auth/signup` | Disabled | Accounts are created by an Admin |
 
 ## Users
 | Method | Path | Access | Description |
 |---|---|---|---|
-| GET | `/users` | Admin, Manager | Paginated staff list, filterable by role/isActive |
-| GET | `/users/:id` | Admin, Manager | Single user |
-| PATCH | `/users/:id` | Admin, Manager | Update name/role/active status |
+| GET | `/users` | Admin | Paginated staff list, filterable by role/isActive |
+| GET | `/users/:id` | Admin | Single user |
+| PATCH | `/users/:id` | Admin | Update name/role/active status |
 | DELETE | `/users/:id` | Admin | Deactivate a user |
 
 ## Categories & Menu
 | Method | Path | Access | Description |
 |---|---|---|---|
 | GET | `/categories` | Any authenticated | List categories |
-| POST | `/categories` | Admin, Manager | Create category |
-| PATCH `/DELETE` | `/categories/:id` | Admin, Manager | Update/delete (blocked if items exist) |
+| POST | `/categories` | Admin | Create category |
+| PATCH `/DELETE` | `/categories/:id` | Admin | Update/delete (blocked if items exist) |
 | GET | `/menu` | Any authenticated | List menu items, filter by category/availability/search |
 | GET | `/menu/:id` | Any authenticated | Single item with recipe |
-| POST | `/menu` | Admin, Manager | Create (multipart/form-data, optional `image`) |
-| PATCH | `/menu/:id` | Admin, Manager | Update (multipart/form-data) |
-| DELETE | `/menu/:id` | Admin, Manager | Delete (blocked if referenced by any order) |
+| POST | `/menu` | Admin | Create (multipart/form-data, optional `image`) |
+| PATCH | `/menu/:id` | Admin | Update (multipart/form-data) |
+| DELETE | `/menu/:id` | Admin | Delete (blocked if referenced by any order) |
 
 ## Inventory & Recipes
 | Method | Path | Access | Description |
 |---|---|---|---|
 | GET | `/inventory` | Admin, Manager, Kitchen | List ingredients + stock |
-| POST | `/inventory` | Admin, Manager | Create ingredient with initial stock |
-| POST | `/inventory/:id/adjust` | Admin, Manager | Manual stock adjustment (requires `reason`) |
-| PATCH | `/inventory/:id/threshold` | Admin, Manager | Update low-stock threshold |
+| POST | `/inventory` | Admin | Create ingredient with initial stock |
+| POST | `/inventory/:id/adjust` | Admin | Manual stock adjustment (requires `reason`) |
+| PATCH | `/inventory/:id/threshold` | Admin | Update low-stock threshold |
 | GET | `/recipes/menu-item/:id` | Any authenticated | Recipe for a menu item |
-| POST | `/recipes` | Admin, Manager | Upsert a recipe line |
-| DELETE | `/recipes/:id` | Admin, Manager | Remove a recipe line |
+| POST | `/recipes` | Admin | Upsert a recipe line |
+| DELETE | `/recipes/:id` | Admin | Remove a recipe line |
 
 ## Orders
 | Method | Path | Access | Description |

@@ -1,5 +1,6 @@
 import { api } from './api';
 import { Category, MenuItem, CreateMenuItemPayload } from '../types/menu.types';
+import { getAllPages, PaginatedResponse } from './paginated';
 
 export async function getCategories(): Promise<Category[]> {
   const { data } = await api.get('/categories');
@@ -27,11 +28,24 @@ interface MenuItemsQuery {
   categoryId?: string;
   search?: string;
   isAvailable?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export async function getMenuItems(query: MenuItemsQuery = {}): Promise<MenuItem[]> {
-  const { data } = await api.get('/menu', { params: query });
-  return data.data;
+  const fetchPage = async (page: number, limit: number) => {
+    const { data } = await api.get<PaginatedResponse<MenuItem>>('/menu', {
+      params: { ...query, page, limit },
+    });
+    return data;
+  };
+
+  if (query.page !== undefined || query.limit !== undefined) {
+    const response = await fetchPage(query.page ?? 1, query.limit ?? 20);
+    return response.data;
+  }
+
+  return getAllPages(fetchPage);
 }
 
 function buildFormData(payload: CreateMenuItemPayload): FormData {

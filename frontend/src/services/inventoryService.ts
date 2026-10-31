@@ -1,14 +1,28 @@
 import { api } from './api';
 import { Ingredient, AdjustStockPayload, CreateIngredientPayload, Notification } from '../types/inventory.types';
+import { getAllPages, PaginatedResponse } from './paginated';
 
 interface IngredientsQuery {
   lowStockOnly?: boolean;
   search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export async function getIngredients(query: IngredientsQuery = {}): Promise<Ingredient[]> {
-  const { data } = await api.get('/inventory', { params: query });
-  return data.data;
+  const fetchPage = async (page: number, limit: number) => {
+    const { data } = await api.get<PaginatedResponse<Ingredient>>('/inventory', {
+      params: { ...query, page, limit },
+    });
+    return data;
+  };
+
+  if (query.page !== undefined || query.limit !== undefined) {
+    const response = await fetchPage(query.page ?? 1, query.limit ?? 20);
+    return response.data;
+  }
+
+  return getAllPages(fetchPage);
 }
 
 export async function createIngredient(payload: CreateIngredientPayload): Promise<Ingredient> {

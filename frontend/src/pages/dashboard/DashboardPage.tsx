@@ -7,10 +7,12 @@ import { getOrders } from '../../services/orderService';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { formatDateOnly, toISODateStart, toISODateEnd } from '../../utils/formatDate';
 import { Loader } from '../../components/common/Loader';
+import { QueryError } from '../../components/common/QueryError';
 import { OrderStatusBadge } from '../../components/orders/OrderStatusBadge';
 import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { SalesChart } from '../../components/reports/SalesChart';
 import { DateRangePicker } from '../../components/common/DateRangePicker';
+import { useAuthStore } from '../../store/authStore';
 
 function todayRange() {
   const now = new Date();
@@ -54,20 +56,25 @@ function shortOrderLabel(orderNumber: string): string {
 export function DashboardPage() {
   const [chartRange, setChartRange] = useState(last7DaysRange());
   const today = todayRange();
+  const user = useAuthStore((state) => state.user);
+  const canViewReports = user?.role === 'ADMIN' || user?.role === 'MANAGER';
 
   const salesQuery = useQuery({
     queryKey: ['sales-summary', today.from, today.to],
     queryFn: () => getSalesSummary(today.from, today.to),
+    enabled: canViewReports,
   });
 
   const weeklySalesQuery = useQuery({
     queryKey: ['sales-summary', chartRange.from, chartRange.to],
     queryFn: () => getSalesSummary(chartRange.from, chartRange.to),
+    enabled: canViewReports,
   });
 
   const topItemsQuery = useQuery({
     queryKey: ['top-items', today.from, today.to],
     queryFn: () => getTopItems(today.from, today.to, 5),
+    enabled: canViewReports,
   });
 
   const menuItemsQuery = useQuery({
@@ -93,37 +100,73 @@ export function DashboardPage() {
 
   return (
     <div className="flex w-full flex-col gap-4">
+      {(salesQuery.isError ||
+        menuItemsQuery.isError ||
+        pendingOrdersQuery.isError ||
+        recentOrdersQuery.isError) && (
+        <div className="flex flex-col gap-2">
+          {salesQuery.isError && (
+            <QueryError error={salesQuery.error} onRetry={() => salesQuery.refetch()} />
+          )}
+          {menuItemsQuery.isError && (
+            <QueryError error={menuItemsQuery.error} onRetry={() => menuItemsQuery.refetch()} />
+          )}
+          {pendingOrdersQuery.isError && (
+            <QueryError
+              error={pendingOrdersQuery.error}
+              onRetry={() => pendingOrdersQuery.refetch()}
+            />
+          )}
+          {recentOrdersQuery.isError && (
+            <QueryError error={recentOrdersQuery.error} onRetry={() => recentOrdersQuery.refetch()} />
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
-        <DateRangePicker
-          from={chartRange.from}
-          to={chartRange.to}
-          onApply={(from, to) => setChartRange({ from, to })}
-        />
+        {canViewReports && (
+          <DateRangePicker
+            from={chartRange.from}
+            to={chartRange.to}
+            onApply={(from, to) => setChartRange({ from, to })}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Total Items"
-          value={String(menuItemsQuery.data?.length ?? 0)}
+          value={menuItemsQuery.isError ? 'Unavailable' : String(menuItemsQuery.data?.length ?? 0)}
           subtext="Across all categories"
           icon={Coffee}
         />
         <StatCard
           label="Total Sale Revenue"
-          value={formatCurrency(summary?.totalRevenue ?? 0)}
-          subtext="Today"
+          value={
+            !canViewReports
+              ? 'Restricted'
+              : salesQuery.isError
+                ? 'Unavailable'
+                : formatCurrency(summary?.totalRevenue ?? 0)
+          }
+          subtext={canViewReports ? 'Today' : 'Admin or Manager access'}
           icon={DollarSign}
         />
         <StatCard
           label="Total Orders Today"
-          value={String(summary?.totalOrders ?? 0)}
-          subtext="Completed orders"
+          value={
+            !canViewReports
+              ? 'Restricted'
+              : salesQuery.isError
+                ? 'Unavailable'
+                : String(summary?.totalOrders ?? 0)
+          }
+          subtext={canViewReports ? 'Completed orders' : 'Admin or Manager access'}
           icon={ClipboardList}
         />
         <StatCard
           label="Pending Orders"
-          value={String(pendingOrdersQuery.data?.length ?? 0)}
+          value={pendingOrdersQuery.isError ? 'Unavailable' : String(pendingOrdersQuery.data?.length ?? 0)}
           subtext="Awaiting the kitchen"
           icon={Clock3}
         />
@@ -137,8 +180,14 @@ export function DashboardPage() {
           <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
             {formatDateOnly(chartRange.from)} - {formatDateOnly(chartRange.to)}
           </p>
-          {weeklySalesQuery.isLoading ? (
+          {!canViewReports ? (
+            <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              Sales reports are available to Admin and Manager accounts.
+            </p>
+          ) : weeklySalesQuery.isLoading ? (
             <Loader label="Loading chart..." />
+          ) : weeklySalesQuery.isError ? (
+            <QueryError error={weeklySalesQuery.error} onRetry={() => weeklySalesQuery.refetch()} />
           ) : (
             <SalesChart data={weeklySalesQuery.data?.dailyBreakdown ?? []} />
           )}
@@ -150,6 +199,8 @@ export function DashboardPage() {
 
           {recentOrdersQuery.isLoading ? (
             <Loader label="Loading orders..." />
+          ) : recentOrdersQuery.isError ? (
+            <QueryError error={recentOrdersQuery.error} onRetry={() => recentOrdersQuery.refetch()} />
           ) : recentOrdersQuery.data && recentOrdersQuery.data.length > 0 ? (
             <table className="w-full table-fixed text-sm">
               <thead>
@@ -198,8 +249,14 @@ export function DashboardPage() {
         <h2 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
           Top Selling Items Today
         </h2>
-        {topItemsQuery.isLoading ? (
+        {!canViewReports ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Sales reports are available to Admin and Manager accounts.
+          </p>
+        ) : topItemsQuery.isLoading ? (
           <Loader label="Loading top items..." />
+        ) : topItemsQuery.isError ? (
+          <QueryError error={topItemsQuery.error} onRetry={() => topItemsQuery.refetch()} />
         ) : topItemsQuery.data && topItemsQuery.data.length > 0 ? (
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {topItemsQuery.data.map((item, index) => (

@@ -8,6 +8,7 @@ import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Loader } from '../../components/common/Loader';
+import { QueryError } from '../../components/common/QueryError';
 import { useToastStore } from '../../components/common/Toast';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -27,7 +28,7 @@ export function InventoryPage() {
   const [newIngredient, setNewIngredient] = useState({ name: '', unit: '', initialQuantity: '', lowStockThreshold: '' });
 
   const user = useAuthStore((state) => state.user);
-  const canManage = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canManage = user?.role === 'ADMIN';
 
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
@@ -88,6 +89,10 @@ export function InventoryPage() {
 
   if (ingredientsQuery.isLoading) {
     return <Loader label="Loading inventory..." />;
+  }
+
+  if (ingredientsQuery.isError) {
+    return <QueryError error={ingredientsQuery.error} onRetry={() => ingredientsQuery.refetch()} />;
   }
 
   const ingredients = ingredientsQuery.data ?? [];

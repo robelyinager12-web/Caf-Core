@@ -7,7 +7,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/menu-item/:menuItemId', getRecipesForMenuItem);
-router.post('/', authorize('ADMIN', 'MANAGER'), upsertRecipeLine);
-router.delete('/:id', authorize('ADMIN', 'MANAGER'), removeRecipeLine);
+router.post('/', authorize('ADMIN'), upsertRecipeLine);
+router.delete('/:id', authorize('ADMIN'), removeRecipeLine);
 
 export default router;

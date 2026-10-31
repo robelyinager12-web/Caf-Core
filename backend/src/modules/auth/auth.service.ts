@@ -3,7 +3,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { prisma } from '../../config/db';
 import { env } from '../../config/env';
 import { AppError } from '../../middlewares/errorHandler';
-import { LoginInput, RegisterInput, PublicSignupInput, ChangePasswordInput } from './auth.validation';
+import { LoginInput, RegisterInput, ChangePasswordInput } from './auth.validation';
 import { Role } from '@prisma/client';
 
 const SALT_ROUNDS = 12;
@@ -55,40 +55,6 @@ export async function registerUser(input: RegisterInput) {
   return user;
 }
 
-/**
- * Public self-signup — unauthenticated, no invitation needed. Always
- * creates the account as CASHIER regardless of anything in the request;
- * the role is hardcoded here, not read from input, since PublicSignupInput
- * has no role field to begin with (defense in depth with the schema).
- */
-export async function publicSignup(input: PublicSignupInput) {
-  const existing = await prisma.user.findUnique({ where: { email: input.email } });
-  if (existing) {
-    throw new AppError('A user with this email already exists', 409);
-  }
-
-  const passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS);
-
-  const user = await prisma.user.create({
-    data: {
-      fullName: input.fullName,
-      email: input.email,
-      passwordHash,
-      role: 'CASHIER',
-    },
-    select: {
-      id: true,
-      fullName: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-    },
-  });
-
-  return user;
-}
-
 export async function loginUser(input: LoginInput) {
   const user = await prisma.user.findUnique({ where: { email: input.email } });
 
@@ -97,6 +63,10 @@ export async function loginUser(input: LoginInput) {
 
   if (!user || !user.isActive || !passwordMatches) {
     throw new AppError('Invalid email or password', 401);
+  }
+
+  if (input.role && input.role !== user.role) {
+    throw new AppError('This account is not assigned the selected role. Contact an administrator.', 403);
   }
 
   const payload: TokenPayload = { userId: user.id, role: user.role };

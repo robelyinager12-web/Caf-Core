@@ -81,13 +81,6 @@ const NAV_CONFIG: NavEntry[] = [
     to: '/kitchen',
   },
   {
-    key: 'staff',
-    label: 'Staff',
-    icon: Users,
-    roles: ['MANAGER'],
-    to: '/staff',
-  },
-  {
     key: 'user-accounts',
     label: 'User Accounts',
     icon: Users,

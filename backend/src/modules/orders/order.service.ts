@@ -209,5 +209,5 @@ export async function updateOrderStatus(id: string, input: UpdateOrderStatusInpu
 }
 
 export async function getOrderHistory(query: ListOrdersQuery) {
-  return listOrders({ ...query, status: query.status ?? 'COMPLETED' });
+  return listOrders(query);
 }

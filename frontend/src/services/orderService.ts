@@ -1,5 +1,6 @@
 import { api } from './api';
 import { Order, CreateOrderPayload, OrderStatus } from '../types/order.types';
+import { getAllPages, PaginatedResponse } from './paginated';
 
 interface OrdersQuery {
   status?: OrderStatus;
@@ -14,8 +15,19 @@ export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
 }
 
 export async function getOrders(query: OrdersQuery = {}): Promise<Order[]> {
-  const { data } = await api.get('/orders', { params: query });
-  return data.data;
+  const fetchPage = async (page: number, limit: number) => {
+    const { data } = await api.get<PaginatedResponse<Order>>('/orders', {
+      params: { ...query, page, limit },
+    });
+    return data;
+  };
+
+  if (query.page !== undefined || query.limit !== undefined) {
+    const response = await fetchPage(query.page ?? 1, query.limit ?? 20);
+    return response.data;
+  }
+
+  return getAllPages(fetchPage);
 }
 
 export async function getOrder(id: string): Promise<Order> {
@@ -29,6 +41,17 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
 }
 
 export async function getOrderHistory(query: OrdersQuery = {}): Promise<Order[]> {
-  const { data } = await api.get('/orders/history', { params: query });
-  return data.data;
+  const fetchPage = async (page: number, limit: number) => {
+    const { data } = await api.get<PaginatedResponse<Order>>('/orders/history', {
+      params: { ...query, page, limit },
+    });
+    return data;
+  };
+
+  if (query.page !== undefined || query.limit !== undefined) {
+    const response = await fetchPage(query.page ?? 1, query.limit ?? 20);
+    return response.data;
+  }
+
+  return getAllPages(fetchPage);
 }

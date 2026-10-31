@@ -18,7 +18,7 @@ export function CategoryManagementPage() {
   const [displayOrder, setDisplayOrder] = useState('');
 
   const user = useAuthStore((state) => state.user);
-  const canManage = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canManage = user?.role === 'ADMIN';
 
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);

@@ -25,10 +25,13 @@ import { useAuthStore } from '../../store/authStore';
 import { User, Role } from '../../types/user.types';
 import { getErrorMessage } from '../../utils/validators';
 import { formatDate } from '../../utils/formatDate';
+import { getAllPages, PaginatedResponse } from '../../services/paginated';
 
 async function fetchUsers(): Promise<User[]> {
-  const { data } = await api.get('/users');
-  return data.data;
+  return getAllPages(async (page, limit) => {
+    const { data } = await api.get<PaginatedResponse<User>>('/users', { params: { page, limit } });
+    return data;
+  });
 }
 
 async function updateUserRequest(id: string, payload: Partial<{ fullName: string; role: Role; isActive: boolean }>) {
@@ -299,6 +302,7 @@ export function StaffManagementPage() {
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </th>
+              <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">
                 <button onClick={() => toggleSort('createdAt')} className="flex items-center gap-1 hover:text-gray-600">
@@ -312,7 +316,7 @@ export function StaffManagementPage() {
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
             {pagedUsers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
                   No Results
                 </td>
               </tr>
@@ -325,6 +329,9 @@ export function StaffManagementPage() {
                       {user.fullName} {isSelf && <span className="text-xs text-gray-400">(You)</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
+                    <td className="px-4 py-3 text-xs font-medium text-gray-600 dark:text-gray-300">
+                      {user.role}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={clsx(

@@ -12,8 +12,8 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', authorize('ADMIN', 'MANAGER', 'KITCHEN'), getIngredients);
-router.post('/', authorize('ADMIN', 'MANAGER'), postIngredient);
-router.post('/:ingredientId/adjust', authorize('ADMIN', 'MANAGER'), postStockAdjustment);
-router.patch('/:ingredientId/threshold', authorize('ADMIN', 'MANAGER'), patchThreshold);
+router.post('/', authorize('ADMIN'), postIngredient);
+router.post('/:ingredientId/adjust', authorize('ADMIN'), postStockAdjustment);
+router.patch('/:ingredientId/threshold', authorize('ADMIN'), patchThreshold);
 
 export default router;

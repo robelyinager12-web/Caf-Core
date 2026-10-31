@@ -12,7 +12,7 @@ router.get('/:id', authenticate, cacheFor(30), getMenuItem);
 router.post(
   '/',
   authenticate,
-  authorize('ADMIN', 'MANAGER'),
+  authorize('ADMIN'),
   uploadMenuImage.single('image'),
   postMenuItem
 );
@@ -20,11 +20,11 @@ router.post(
 router.patch(
   '/:id',
   authenticate,
-  authorize('ADMIN', 'MANAGER'),
+  authorize('ADMIN'),
   uploadMenuImage.single('image'),
   patchMenuItem
 );
 
-router.delete('/:id', authenticate, authorize('ADMIN', 'MANAGER'), removeMenuItem);
+router.delete('/:id', authenticate, authorize('ADMIN'), removeMenuItem);
 
 export default router;

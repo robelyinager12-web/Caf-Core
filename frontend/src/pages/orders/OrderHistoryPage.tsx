@@ -8,6 +8,7 @@ import { PaymentStatusBadge } from '../../components/orders/PaymentStatusBadge';
 import { PaymentForm } from '../../components/orders/PaymentForm';
 import { Modal } from '../../components/common/Modal';
 import { Loader } from '../../components/common/Loader';
+import { QueryError } from '../../components/common/QueryError';
 import { useToastStore } from '../../components/common/Toast';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { formatDate } from '../../utils/formatDate';
@@ -78,6 +79,8 @@ export function OrderHistoryPage() {
 
       {historyQuery.isLoading ? (
         <Loader label="Loading order history..." />
+      ) : historyQuery.isError ? (
+        <QueryError error={historyQuery.error} onRetry={() => historyQuery.refetch()} />
       ) : (
         <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-gray-200">
           <table className="min-w-full divide-y divide-gray-100 text-sm">

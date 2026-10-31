@@ -6,7 +6,11 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 function requireEnv(key: string): string {
   const value = process.env[key];
   if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
+    throw new Error(
+      `Missing required environment variable: ${key}. ` +
+        'Configure it in backend/.env (copy backend/.env.example to backend/.env and edit the value), ' +
+        'or set it in your environment.'
+    );
   }
   return value;
 }

@@ -1,22 +1,30 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Lock } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 import { useLogin } from '../../hooks/useAuth';
 import { getErrorMessage } from '../../utils/validators';
 import { useToastStore } from '../../components/common/Toast';
+import { Role } from '../../types/user.types';
+
+const ROLES: { value: Role; label: string }[] = [
+  { value: 'ADMIN', label: 'Administrator' },
+  { value: 'MANAGER', label: 'Manager' },
+  { value: 'CASHIER', label: 'Cashier' },
+  { value: 'KITCHEN', label: 'Kitchen Staff' },
+];
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<Role | ''>('');
   const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useLogin();
   const showToast = useToastStore((state) => state.show);
-  const navigate = useNavigate();
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    loginMutation.mutate({ email, password });
+    if (!role) return;
+    loginMutation.mutate({ email, password, role });
   }
 
   // No unverified password reset exists yet — see Settings > Change
@@ -41,6 +49,28 @@ export function LoginPage() {
           autoFocus
           className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
         />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="role" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Sign in as
+        </label>
+        <select
+          id="role"
+          value={role}
+          onChange={(e) => setRole(e.target.value as Role | '')}
+          required
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+        >
+          <option value="" disabled>
+            Select your assigned role
+          </option>
+          {ROLES.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -83,20 +113,13 @@ export function LoginPage() {
         <p className="text-sm text-danger">{getErrorMessage(loginMutation.error)}</p>
       )}
 
-      <Button type="submit" isLoading={loginMutation.isPending} className="w-full">
+      <Button type="submit" isLoading={loginMutation.isPending} disabled={!role} className="w-full">
         <LogIn className="h-4 w-4" />
         Login
       </Button>
 
       <p className="text-center text-xs text-gray-500 dark:text-gray-400">
-        Don't have an account?{' '}
-        <button
-          type="button"
-          onClick={() => navigate('/signup')}
-          className="font-medium text-primary-600 hover:text-primary-700"
-        >
-          Register Here
-        </button>
+        Your account and role must be created by an administrator.
       </p>
     </form>
   );

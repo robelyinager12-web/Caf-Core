@@ -71,8 +71,8 @@ export function createApp(): Application {
   app.use(globalRateLimiter);
 
   app.use(
-    '/uploads',
-    express.static(path.join(__dirname, '..', 'uploads'), {
+    '/uploads/menu-images',
+    express.static(path.resolve(process.cwd(), env.upload.dir), {
       maxAge: '7d',
     })
   );

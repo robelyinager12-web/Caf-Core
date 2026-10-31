@@ -1,7 +1,12 @@
 # User Guide (Cashier & Kitchen Staff)
 
 ## Logging In
-Go to the app URL, enter the email and password given to you by your manager. If you forget your password, ask an Admin or Manager to reset it via Staff Management — there's no self-service reset yet.
+Go to the app URL, enter the email and password given to you by your administrator, and select your assigned role. The role selection must match the role assigned to your account; it does not grant a different role. If you forget your password, contact your Admin; there's no self-service reset yet.
+
+Administrators create accounts and assign roles in **User Accounts**. Public self-registration is disabled.
+
+## Managing Food Items (Admin)
+Only an Admin can add, edit, hide, or delete menu items and categories. Open **Menu → Menu Items** and choose **Add Item**. Managers, Cashiers, and Kitchen staff can view the menu but cannot change it.
 
 ## Clocking In/Out
 Click **Clock In** in the top-right corner when your shift starts. It turns into a green **On Shift** button — click it again to clock out at the end of your shift.

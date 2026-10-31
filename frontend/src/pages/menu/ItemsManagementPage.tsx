@@ -6,6 +6,7 @@ import { MenuItemForm } from '../../components/menu/MenuItemForm';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import { Loader } from '../../components/common/Loader';
+import { QueryError } from '../../components/common/QueryError';
 import { useToastStore } from '../../components/common/Toast';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -57,7 +58,7 @@ export function ItemsManagementPage() {
   const [editingItem, setEditingItem] = useState<MenuItem | undefined>(undefined);
 
   const user = useAuthStore((state) => state.user);
-  const canManage = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+  const canManage = user?.role === 'ADMIN';
 
   const queryClient = useQueryClient();
   const showToast = useToastStore((state) => state.show);
@@ -138,10 +139,6 @@ export function ItemsManagementPage() {
   }
 
   function handleExport() {
-    // TEMPORARY DEBUG LINE — confirms whether the click handler fires at
-    // all. Remove this once export is confirmed working.
-    alert('Export clicked. Item count: ' + filteredItems.length);
-
     if (filteredItems.length === 0) {
       showToast('No items to export', 'error');
       return;
@@ -152,6 +149,14 @@ export function ItemsManagementPage() {
 
   if (categoriesQuery.isLoading || menuItemsQuery.isLoading) {
     return <Loader label="Loading items..." />;
+  }
+
+  if (categoriesQuery.isError) {
+    return <QueryError error={categoriesQuery.error} onRetry={() => categoriesQuery.refetch()} />;
+  }
+
+  if (menuItemsQuery.isError) {
+    return <QueryError error={menuItemsQuery.error} onRetry={() => menuItemsQuery.refetch()} />;
   }
 
   return (

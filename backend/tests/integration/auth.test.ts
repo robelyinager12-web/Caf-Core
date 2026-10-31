@@ -26,6 +26,17 @@ describe('Auth Module', () => {
       expect(res.body.data.user.passwordHash).toBeUndefined();
     });
 
+    it('requires the selected login role to match the assigned role', async () => {
+      const { user, password } = await createTestUser('CASHIER', 'login-role-mismatch');
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ email: user.email, password, role: 'ADMIN' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.message).toContain('not assigned the selected role');
+      await cleanupTestUser(user.id);
+    });
+
     it('rejects a wrong password with a generic message', async () => {
       const { user } = await createTestUser('ADMIN', 'login-wrongpass');
 
@@ -74,7 +85,7 @@ describe('Auth Module', () => {
       expect(res.status).toBe(401);
     });
 
-    it('rejects registration from a Cashier token (not Admin/Manager)', async () => {
+    it('rejects registration from a Cashier token', async () => {
       const { user, password } = await createTestUser('CASHIER', 'register-forbidden');
       const loginRes = await request(app)
         .post('/api/auth/login')
@@ -93,6 +104,34 @@ describe('Auth Module', () => {
       expect(res.status).toBe(403);
 
       await cleanupTestUser(user.id);
+    });
+
+    it('rejects registration from a Manager token', async () => {
+      const { user, password } = await createTestUser('MANAGER', 'register-manager-forbidden');
+      const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({ email: user.email, password });
+
+      const res = await request(app)
+        .post('/api/auth/register')
+        .set('Authorization', `Bearer ${loginRes.body.data.accessToken}`)
+        .send({
+          fullName: 'New Person',
+          email: 'manager-created@test.local',
+          password: 'Password123',
+          role: 'CASHIER',
+        });
+
+      expect(res.status).toBe(403);
+      await cleanupTestUser(user.id);
+    });
+
+    it('does not allow public self-signup', async () => {
+      const res = await request(app)
+        .post('/api/auth/signup')
+        .send({ fullName: 'New User', email: 'public-signup@test.local', password: 'Password123' });
+
+      expect(res.status).toBe(404);
     });
 
     it('allows an Admin to register a new staff member', async () => {
