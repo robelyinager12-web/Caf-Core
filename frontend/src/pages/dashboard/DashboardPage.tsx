@@ -118,7 +118,10 @@ export function DashboardPage() {
             />
           )}
           {recentOrdersQuery.isError && (
-            <QueryError error={recentOrdersQuery.error} onRetry={() => recentOrdersQuery.refetch()} />
+            <QueryError
+              error={recentOrdersQuery.error}
+              onRetry={() => recentOrdersQuery.refetch()}
+            />
           )}
         </div>
       )}
@@ -133,7 +136,7 @@ export function DashboardPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Total Items"
           value={menuItemsQuery.isError ? 'Unavailable' : String(menuItemsQuery.data?.length ?? 0)}
@@ -166,7 +169,11 @@ export function DashboardPage() {
         />
         <StatCard
           label="Pending Orders"
-          value={pendingOrdersQuery.isError ? 'Unavailable' : String(pendingOrdersQuery.data?.length ?? 0)}
+          value={
+            pendingOrdersQuery.isError
+              ? 'Unavailable'
+              : String(pendingOrdersQuery.data?.length ?? 0)
+          }
           subtext="Awaiting the kitchen"
           icon={Clock3}
         />
@@ -194,49 +201,56 @@ export function DashboardPage() {
         </div>
 
         <div className="min-w-0 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-          <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Latest Orders</h2>
+          <h2 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
+            Latest Orders
+          </h2>
           <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">Showing latest orders</p>
 
           {recentOrdersQuery.isLoading ? (
             <Loader label="Loading orders..." />
           ) : recentOrdersQuery.isError ? (
-            <QueryError error={recentOrdersQuery.error} onRetry={() => recentOrdersQuery.refetch()} />
+            <QueryError
+              error={recentOrdersQuery.error}
+              onRetry={() => recentOrdersQuery.refetch()}
+            />
           ) : recentOrdersQuery.data && recentOrdersQuery.data.length > 0 ? (
-            <table className="w-full table-fixed text-sm">
-              <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                  <th className="w-1/5 whitespace-nowrap pb-2 pr-2 font-medium">Order</th>
-                  <th className="w-1/6 whitespace-nowrap pb-2 pr-2 font-medium">Amount</th>
-                  <th className="w-1/5 whitespace-nowrap pb-2 pr-2 font-medium">Status</th>
-                  <th className="w-1/5 whitespace-nowrap pb-2 pr-2 font-medium">Payment</th>
-                  <th className="w-1/4 whitespace-nowrap pb-2 font-medium">Created</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                {recentOrdersQuery.data.map((order) => (
-                  <tr key={order.id}>
-                    <td
-                      className="truncate whitespace-nowrap py-2 pr-2 font-medium text-gray-900 dark:text-gray-100"
-                      title={order.orderNumber}
-                    >
-                      {shortOrderLabel(order.orderNumber)}
-                    </td>
-                    <td className="whitespace-nowrap py-2 pr-2 text-gray-700 dark:text-gray-300">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="whitespace-nowrap py-2 pr-2">
-                      <OrderStatusBadge status={order.status} />
-                    </td>
-                    <td className="whitespace-nowrap py-2 pr-2">
-                      <PaymentStatusBadge payment={order.payment} />
-                    </td>
-                    <td className="truncate whitespace-nowrap py-2 text-xs text-gray-400 dark:text-gray-500">
-                      {formatDateOnly(order.createdAt)}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-[520px] w-full table-fixed text-sm">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    <th className="w-1/5 whitespace-nowrap pb-2 pr-2 font-medium">Order</th>
+                    <th className="w-1/6 whitespace-nowrap pb-2 pr-2 font-medium">Amount</th>
+                    <th className="w-1/5 whitespace-nowrap pb-2 pr-2 font-medium">Status</th>
+                    <th className="w-1/5 whitespace-nowrap pb-2 pr-2 font-medium">Payment</th>
+                    <th className="w-1/4 whitespace-nowrap pb-2 font-medium">Created</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+                  {recentOrdersQuery.data.map((order) => (
+                    <tr key={order.id}>
+                      <td
+                        className="truncate whitespace-nowrap py-2 pr-2 font-medium text-gray-900 dark:text-gray-100"
+                        title={order.orderNumber}
+                      >
+                        {shortOrderLabel(order.orderNumber)}
+                      </td>
+                      <td className="whitespace-nowrap py-2 pr-2 text-gray-700 dark:text-gray-300">
+                        {formatCurrency(order.total)}
+                      </td>
+                      <td className="whitespace-nowrap py-2 pr-2">
+                        <OrderStatusBadge status={order.status} />
+                      </td>
+                      <td className="whitespace-nowrap py-2 pr-2">
+                        <PaymentStatusBadge payment={order.payment} />
+                      </td>
+                      <td className="truncate whitespace-nowrap py-2 text-xs text-gray-400 dark:text-gray-500">
+                        {formatDateOnly(order.createdAt)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
               No orders yet.
@@ -270,7 +284,9 @@ export function DashboardPage() {
                   </span>
                   <span className="truncate">{item.name}</span>
                 </span>
-                <span className="shrink-0 text-gray-500 dark:text-gray-400">{item.quantitySold}</span>
+                <span className="shrink-0 text-gray-500 dark:text-gray-400">
+                  {item.quantitySold}
+                </span>
               </li>
             ))}
           </ul>

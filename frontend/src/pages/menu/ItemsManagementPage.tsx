@@ -166,7 +166,7 @@ export function ItemsManagementPage() {
           <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Items</h1>
           <p className="text-xs text-gray-400 dark:text-gray-500">Dashboard &gt; Menu &gt; Menu Items</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {canManage && (
             <Link
               to="/menu/categories"

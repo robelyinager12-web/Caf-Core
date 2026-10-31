@@ -75,7 +75,8 @@ function OrderActionsMenu({
   }, []);
 
   const nextLabel = NEXT_LABEL[order.status];
-  const canCancel = order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
+  const canCancel =
+    order.status === 'PENDING' || order.status === 'PREPARING' || order.status === 'READY';
   const isUnpaid = !order.payment && order.status !== 'CANCELLED';
 
   return (
@@ -90,7 +91,9 @@ function OrderActionsMenu({
 
       {isOpen && (
         <div className="absolute right-0 top-9 z-50 w-48 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-          <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">Actions</p>
+          <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">
+            Actions
+          </p>
 
           {nextLabel && (
             <button
@@ -220,9 +223,7 @@ export function KitchenDisplayPage() {
     mutationFn: (payload: { method: PaymentMethod; amount: number }) =>
       createPayment({ orderId: payingOrder!.id, ...payload }),
     onSuccess: (payment) => {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === payingOrder!.id ? { ...o, payment } : o))
-      );
+      setOrders((prev) => prev.map((o) => (o.id === payingOrder!.id ? { ...o, payment } : o)));
       showToast('Payment recorded successfully');
       setPayingOrder(null);
       queryClient.invalidateQueries({ queryKey: ['kitchen-orders'] });
@@ -312,7 +313,7 @@ export function KitchenDisplayPage() {
               setPage(1);
             }}
             placeholder="Search Order"
-            className="flex-1 min-w-[200px] rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+            className="min-w-0 flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:min-w-[200px]"
           />
           <button
             onClick={() => setPage(1)}
@@ -322,7 +323,53 @@ export function KitchenDisplayPage() {
           </button>
         </div>
 
-        <table className="min-w-full text-sm">
+        <div className="space-y-3 p-3 lg:hidden">
+          {pagedOrders.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No Results</p>
+          ) : (
+            pagedOrders.map((order) => (
+              <article
+                key={order.id}
+                className="rounded-lg border border-gray-100 p-3 dark:border-gray-800"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p
+                      className="font-medium text-gray-900 dark:text-gray-100"
+                      title={order.orderNumber}
+                    >
+                      {shortOrderLabel(order.orderNumber)}
+                    </p>
+                    <p className="break-words text-sm text-gray-600 dark:text-gray-300">
+                      {order.guestName
+                        ? `${order.guestName}${order.guestPhone ? ` · ${order.guestPhone}` : ''}`
+                        : order.orderType === 'DINE_IN'
+                          ? (order.tableOrToken ?? '—')
+                          : 'Staff takeaway'}
+                    </p>
+                  </div>
+                  <OrderActionsMenu
+                    order={order}
+                    onAdvance={() => handleAdvance(order)}
+                    onCancel={() => handleCancel(order)}
+                    onOpenReceiptPreview={() => setReceiptPreviewOrder(order)}
+                    onOpenPayment={() => setPayingOrder(order)}
+                    isUpdating={updatingOrderId === order.id}
+                  />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className="mr-auto font-medium text-gray-900 dark:text-gray-100">
+                    {formatCurrency(order.total)}
+                  </span>
+                  <OrderStatusBadge status={order.status} />
+                  <PaymentStatusBadge payment={order.payment} />
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+
+        <table className="hidden min-w-full text-sm lg:table">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
               <th className="px-4 py-3 font-medium">Order ID</th>
@@ -330,7 +377,10 @@ export function KitchenDisplayPage() {
               <th className="px-4 py-3 font-medium">Amount</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">
-                <button onClick={togglePaymentSort} className="flex items-center gap-1 hover:text-gray-600">
+                <button
+                  onClick={togglePaymentSort}
+                  className="flex items-center gap-1 hover:text-gray-600"
+                >
                   Payment Status
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
@@ -341,7 +391,10 @@ export function KitchenDisplayPage() {
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
             {pagedOrders.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td
+                  colSpan={6}
+                  className="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
+                >
                   No Results
                 </td>
               </tr>
@@ -357,10 +410,18 @@ export function KitchenDisplayPage() {
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                     {order.guestName ? (
                       <div>
-                        <p className="font-medium text-gray-800 dark:text-gray-200">{order.guestName}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{order.guestPhone}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">
+                          {order.guestName}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {order.guestPhone}
+                        </p>
                       </div>
-                    ) : order.orderType === 'DINE_IN' ? order.tableOrToken ?? '—' : 'Staff takeaway'}
+                    ) : order.orderType === 'DINE_IN' ? (
+                      (order.tableOrToken ?? '—')
+                    ) : (
+                      'Staff takeaway'
+                    )}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                     {formatCurrency(order.total)}
@@ -388,7 +449,9 @@ export function KitchenDisplayPage() {
         </table>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredOrders.length} rows.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Total {filteredOrders.length} rows.
+          </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               Rows per page

@@ -4,11 +4,11 @@ import { ThemeToggle } from '../components/common/ThemeToggle';
 
 export function AuthLayout() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-gray-950 px-4">
-      <div className="absolute right-4 top-4">
+    <div className="relative flex min-h-screen items-center justify-center bg-gray-950 px-3 py-16 sm:px-4 sm:py-8">
+      <div className="absolute right-3 top-3 sm:right-4 sm:top-4">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-[360px] rounded-2xl bg-white p-6 shadow-lg ring-1 ring-gray-800 dark:bg-gray-900 dark:ring-gray-800">
+      <div className="w-full max-w-[420px] rounded-2xl bg-white p-5 shadow-lg ring-1 ring-gray-800 dark:bg-gray-900 dark:ring-gray-800 sm:p-6">
         <div className="mb-5 flex flex-col items-center text-center">
           <span className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary-50 text-primary-600 dark:bg-primary-500/10">
             <ChefHat className="h-5 w-5" />

@@ -123,7 +123,9 @@ export function BillingPage() {
           <p className="mt-2 text-2xl font-bold text-success">{formatCurrency(totalCollected)}</p>
         </div>
         <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Outstanding (Unpaid)</p>
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            Outstanding (Unpaid)
+          </p>
           <p className="mt-2 text-2xl font-bold text-warning">{formatCurrency(totalOutstanding)}</p>
         </div>
       </div>
@@ -148,75 +150,82 @@ export function BillingPage() {
           ))}
         </div>
 
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-              <th className="px-4 py-3 font-medium">Order</th>
-              <th className="px-4 py-3 font-medium">Amount</th>
-              <th className="px-4 py-3 font-medium">Order Status</th>
-              <th className="px-4 py-3 font-medium">Payment</th>
-              <th className="px-4 py-3 font-medium">Date</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-            {pagedOrders.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-                  No Results
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-[680px] text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+                <th className="px-4 py-3 font-medium">Order</th>
+                <th className="px-4 py-3 font-medium">Amount</th>
+                <th className="px-4 py-3 font-medium">Order Status</th>
+                <th className="px-4 py-3 font-medium">Payment</th>
+                <th className="px-4 py-3 font-medium">Date</th>
+                <th className="px-4 py-3 text-right font-medium">Actions</th>
               </tr>
-            ) : (
-              pagedOrders.map((order) => (
-                <tr key={order.id}>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+              {pagedOrders.length === 0 ? (
+                <tr>
                   <td
-                    className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100"
-                    title={order.orderNumber}
+                    colSpan={6}
+                    className="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
                   >
-                    {shortOrderLabel(order.orderNumber)}
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                    {formatCurrency(order.total)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <OrderStatusBadge status={order.status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <PaymentStatusBadge payment={order.payment} />
-                  </td>
-                  <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
-                    {formatDate(order.createdAt)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      {order.status !== 'CANCELLED' && !order.payment && (
-                        <button
-                          onClick={() => setPayingOrder(order)}
-                          className="flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700"
-                        >
-                          <CreditCard className="h-3.5 w-3.5" />
-                          Take Payment
-                        </button>
-                      )}
-                      {order.payment && (
-                        <button
-                          onClick={() => setReceiptPreviewOrder(order)}
-                          className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                        >
-                          <Printer className="h-3.5 w-3.5" />
-                          Receipt
-                        </button>
-                      )}
-                    </div>
+                    No Results
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                pagedOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td
+                      className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100"
+                      title={order.orderNumber}
+                    >
+                      {shortOrderLabel(order.orderNumber)}
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                      {formatCurrency(order.total)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <OrderStatusBadge status={order.status} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <PaymentStatusBadge payment={order.payment} />
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400 dark:text-gray-500">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-2">
+                        {order.status !== 'CANCELLED' && !order.payment && (
+                          <button
+                            onClick={() => setPayingOrder(order)}
+                            className="flex items-center gap-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-700"
+                          >
+                            <CreditCard className="h-3.5 w-3.5" />
+                            Take Payment
+                          </button>
+                        )}
+                        {order.payment && (
+                          <button
+                            onClick={() => setReceiptPreviewOrder(order)}
+                            className="flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            Receipt
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredOrders.length} rows.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Total {filteredOrders.length} rows.
+          </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               Rows per page

@@ -34,12 +34,20 @@ async function fetchUsers(): Promise<User[]> {
   });
 }
 
-async function updateUserRequest(id: string, payload: Partial<{ fullName: string; role: Role; isActive: boolean }>) {
+async function updateUserRequest(
+  id: string,
+  payload: Partial<{ fullName: string; role: Role; isActive: boolean }>
+) {
   const { data } = await api.patch(`/users/${id}`, payload);
   return data.data as User;
 }
 
-async function registerStaffRequest(payload: { fullName: string; email: string; password: string; role: Role }) {
+async function registerStaffRequest(payload: {
+  fullName: string;
+  email: string;
+  password: string;
+  role: Role;
+}) {
   const { data } = await api.post('/auth/register', payload);
   return data.data as User;
 }
@@ -88,7 +96,9 @@ function ActionsMenu({
 
       {isOpen && (
         <div className="absolute right-0 top-9 z-50 w-44 rounded-xl bg-white py-2 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-          <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">Actions</p>
+          <p className="px-3 pb-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500">
+            Actions
+          </p>
 
           <button
             type="button"
@@ -170,8 +180,13 @@ export function StaffManagementPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: Partial<{ fullName: string; role: Role }> }) =>
-      updateUserRequest(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Partial<{ fullName: string; role: Role }>;
+    }) => updateUserRequest(id, payload),
     onSuccess: () => {
       invalidate();
       showToast('Staff account updated');
@@ -183,7 +198,9 @@ export function StaffManagementPage() {
 
   const toggleActiveMutation = useMutation({
     mutationFn: ({ user }: { user: User }) =>
-      user.isActive ? deactivateUserRequest(user.id) : updateUserRequest(user.id, { isActive: true }),
+      user.isActive
+        ? deactivateUserRequest(user.id)
+        : updateUserRequest(user.id, { isActive: true }),
     onSuccess: (_data, variables) => {
       invalidate();
       showToast(variables.user.isActive ? 'Account blocked' : 'Account unblocked');
@@ -192,11 +209,21 @@ export function StaffManagementPage() {
     onError: (error) => showToast(getErrorMessage(error), 'error'),
   });
 
-  function handleSubmit(payload: { fullName?: string; email?: string; password?: string; role?: Role }) {
+  function handleSubmit(payload: {
+    fullName?: string;
+    email?: string;
+    password?: string;
+    role?: Role;
+  }) {
     if (editingUser) {
-      updateMutation.mutate({ id: editingUser.id, payload: { fullName: payload.fullName, role: payload.role } });
+      updateMutation.mutate({
+        id: editingUser.id,
+        payload: { fullName: payload.fullName, role: payload.role },
+      });
     } else {
-      createMutation.mutate(payload as { fullName: string; email: string; password: string; role: Role });
+      createMutation.mutate(
+        payload as { fullName: string; email: string; password: string; role: Role }
+      );
     }
   }
 
@@ -251,7 +278,7 @@ export function StaffManagementPage() {
 
       <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
         <div className="flex flex-wrap items-center justify-between gap-6 border-b border-gray-100 p-4 dark:border-gray-800">
-          <div className="flex flex-1 min-w-[240px] items-center gap-2">
+          <div className="flex w-full flex-1 items-center gap-2 sm:min-w-[240px]">
             <input
               value={search}
               onChange={(e) => {
@@ -278,26 +305,79 @@ export function StaffManagementPage() {
           </button>
         </div>
 
-        {/* NOTE: no overflow-x-auto wrapper here anymore. That wrapper was
-            the actual bug — setting overflow-x: auto forces the browser to
-            also treat overflow-y as auto/clipped on the same element (this
-            is standard CSS behavior, not a Tailwind quirk), which silently
-            cut off the absolutely-positioned Actions dropdown any time it
-            tried to render below a row. The table's five columns are narrow
-            enough not to need horizontal scrolling on realistic screen
-            widths, so removing this wrapper has no visual downside and
-            fully fixes the dropdown. */}
-        <table className="min-w-full text-sm">
+        <div className="space-y-3 p-3 lg:hidden">
+          {pagedUsers.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">No Results</p>
+          ) : (
+            pagedUsers.map((user) => {
+              const isSelf = user.id === currentUser?.id;
+              return (
+                <article
+                  key={user.id}
+                  className="rounded-lg border border-gray-100 p-3 dark:border-gray-800"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="break-words font-medium text-gray-900 dark:text-gray-100">
+                        {user.fullName}{' '}
+                        {isSelf && <span className="text-xs text-gray-400">(You)</span>}
+                      </p>
+                      <p className="break-all text-sm text-gray-600 dark:text-gray-300">
+                        {user.email}
+                      </p>
+                    </div>
+                    <ActionsMenu
+                      user={user}
+                      isSelf={isSelf}
+                      onEdit={() => {
+                        setEditingUser(user);
+                        setIsFormOpen(true);
+                      }}
+                      onToggleActive={() => toggleActiveMutation.mutate({ user })}
+                      onDeleteAttempt={() => setDeleteAttemptUser(user)}
+                    />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full bg-gray-100 px-2.5 py-1 font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                      {user.role}
+                    </span>
+                    <span
+                      className={clsx(
+                        'rounded-full px-2.5 py-1 font-medium',
+                        user.isActive
+                          ? 'bg-success/10 text-success'
+                          : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                      )}
+                    >
+                      {user.isActive ? 'ACTIVE' : 'BLOCKED'}
+                    </span>
+                    <span className="text-gray-400 dark:text-gray-500">
+                      Created {user.createdAt ? formatDate(user.createdAt) : '—'}
+                    </span>
+                  </div>
+                </article>
+              );
+            })
+          )}
+        </div>
+
+        <table className="hidden min-w-full text-sm lg:table">
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
               <th className="px-4 py-3 font-medium">
-                <button onClick={() => toggleSort('fullName')} className="flex items-center gap-1 hover:text-gray-600">
+                <button
+                  onClick={() => toggleSort('fullName')}
+                  className="flex items-center gap-1 hover:text-gray-600"
+                >
                   Name
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
               </th>
               <th className="px-4 py-3 font-medium">
-                <button onClick={() => toggleSort('email')} className="flex items-center gap-1 hover:text-gray-600">
+                <button
+                  onClick={() => toggleSort('email')}
+                  className="flex items-center gap-1 hover:text-gray-600"
+                >
                   Email
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
@@ -305,7 +385,10 @@ export function StaffManagementPage() {
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">
-                <button onClick={() => toggleSort('createdAt')} className="flex items-center gap-1 hover:text-gray-600">
+                <button
+                  onClick={() => toggleSort('createdAt')}
+                  className="flex items-center gap-1 hover:text-gray-600"
+                >
                   Created At
                   <ArrowUpDown className="h-3 w-3" />
                 </button>
@@ -316,7 +399,10 @@ export function StaffManagementPage() {
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
             {pagedUsers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+                <td
+                  colSpan={6}
+                  className="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
+                >
                   No Results
                 </td>
               </tr>
@@ -326,7 +412,8 @@ export function StaffManagementPage() {
                 return (
                   <tr key={user.id}>
                     <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                      {user.fullName} {isSelf && <span className="text-xs text-gray-400">(You)</span>}
+                      {user.fullName}{' '}
+                      {isSelf && <span className="text-xs text-gray-400">(You)</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
                     <td className="px-4 py-3 text-xs font-medium text-gray-600 dark:text-gray-300">
@@ -367,7 +454,9 @@ export function StaffManagementPage() {
         </table>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 dark:border-gray-800">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total {filteredAndSorted.length} rows.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Total {filteredAndSorted.length} rows.
+          </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               Rows per page

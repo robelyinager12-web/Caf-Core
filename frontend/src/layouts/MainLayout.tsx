@@ -168,8 +168,12 @@ export function MainLayout() {
             <ChefHat className="h-4 w-4" />
           </span>
           <div>
-            <h1 className="text-sm font-bold leading-tight text-gray-900 dark:text-gray-100">CaféCore</h1>
-            <p className="text-[11px] leading-tight text-gray-400 dark:text-gray-500">Cafeteria System</p>
+            <h1 className="text-sm font-bold leading-tight text-gray-900 dark:text-gray-100">
+              CaféCore
+            </h1>
+            <p className="text-[11px] leading-tight text-gray-400 dark:text-gray-500">
+              Cafeteria System
+            </p>
           </div>
         </div>
 
@@ -196,7 +200,10 @@ export function MainLayout() {
                     <entry.icon className="h-4 w-4 shrink-0" />
                     <span className="flex-1 text-left">{entry.label}</span>
                     <ChevronDown
-                      className={clsx('h-3.5 w-3.5 shrink-0 transition-transform', isOpen && 'rotate-180')}
+                      className={clsx(
+                        'h-3.5 w-3.5 shrink-0 transition-transform',
+                        isOpen && 'rotate-180'
+                      )}
                     />
                   </button>
 
@@ -259,8 +266,8 @@ export function MainLayout() {
         />
       )}
 
-      <div className="flex min-h-screen flex-col lg:ml-64">
-        <header className="flex h-14 items-center justify-between border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex min-h-screen min-w-0 flex-col lg:ml-64">
+        <header className="sticky top-0 z-10 flex min-h-14 items-center justify-between gap-2 border-b border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-900 sm:px-4 lg:static lg:h-14 lg:flex-nowrap lg:py-0">
           <button
             type="button"
             onClick={toggleSidebar}
@@ -271,14 +278,14 @@ export function MainLayout() {
             <MenuIcon className="h-5 w-5" />
           </button>
 
-          <div className="flex flex-1 items-center justify-end gap-2">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             <ThemeToggle />
             <NotificationBell />
             <ShiftClockWidget />
           </div>
         </header>
 
-        <main className="flex-1 p-4">
+        <main className="min-w-0 flex-1 p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

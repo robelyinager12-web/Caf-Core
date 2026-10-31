@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Calendar, ChevronDown, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import {
+  Calendar,
+  ChevronDown,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+} from 'lucide-react';
 import { formatDateOnly, toISODateStart, toISODateEnd } from '../../utils/formatDate';
 
 interface DateRangePickerProps {
@@ -34,8 +39,18 @@ function buildMonthGrid(year: number, month: number): (Date | null)[] {
 
 const WEEKDAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTH_LABELS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
 export function DateRangePicker({ from, to, onApply }: DateRangePickerProps) {
@@ -66,13 +81,17 @@ export function DateRangePicker({ from, to, onApply }: DateRangePickerProps) {
 
   function goToPrevMonth() {
     setLeftMonth((prev) =>
-      prev.month === 0 ? { year: prev.year - 1, month: 11 } : { year: prev.year, month: prev.month - 1 }
+      prev.month === 0
+        ? { year: prev.year - 1, month: 11 }
+        : { year: prev.year, month: prev.month - 1 }
     );
   }
 
   function goToNextMonth() {
     setLeftMonth((prev) =>
-      prev.month === 11 ? { year: prev.year + 1, month: 0 } : { year: prev.year, month: prev.month + 1 }
+      prev.month === 11
+        ? { year: prev.year + 1, month: 0 }
+        : { year: prev.year, month: prev.month + 1 }
     );
   }
 
@@ -116,7 +135,12 @@ export function DateRangePicker({ from, to, onApply }: DateRangePickerProps) {
     setIsOpen(false);
   }
 
-  function renderMonth(year: number, month: number, showPrevArrow: boolean, showNextArrow: boolean) {
+  function renderMonth(
+    year: number,
+    month: number,
+    showPrevArrow: boolean,
+    showNextArrow: boolean
+  ) {
     const cells = buildMonthGrid(year, month);
     return (
       <div className="flex-1">
@@ -168,8 +192,8 @@ export function DateRangePicker({ from, to, onApply }: DateRangePickerProps) {
                   isEdge
                     ? 'bg-primary-600 font-semibold text-white'
                     : inRange
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
-                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                      ? 'bg-primary-50 text-primary-700 dark:bg-primary-500/10 dark:text-primary-400'
+                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
                 }`}
               >
                 {date.getDate()}
@@ -194,15 +218,16 @@ export function DateRangePicker({ from, to, onApply }: DateRangePickerProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-[560px] max-w-[95vw] rounded-xl bg-white p-4 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
-          <div className="flex gap-6">
+        <div className="absolute left-0 right-auto z-50 mt-2 max-h-[calc(100dvh_-_1.5rem)] w-[calc(100vw_-_3rem)] max-w-[560px] overflow-y-auto rounded-xl bg-white p-3 shadow-lg ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800 sm:left-auto sm:right-0 sm:p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
             {renderMonth(leftMonth.year, leftMonth.month, true, false)}
             {renderMonth(rightMonth.year, rightMonth.month, false, true)}
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              {rangeStart ? formatDateOnly(rangeStart) : '—'} - {rangeEnd ? formatDateOnly(rangeEnd) : '—'}
+              {rangeStart ? formatDateOnly(rangeStart) : '—'} -{' '}
+              {rangeEnd ? formatDateOnly(rangeEnd) : '—'}
             </span>
             <button
               type="button"
