@@ -1,6 +1,11 @@
 import { prisma } from '../../config/db';
 import { AppError } from '../../middlewares/errorHandler';
-import { CreateOrderInput, UpdateOrderStatusInput, ListOrdersQuery } from './order.validation';
+import {
+  CreateGuestOrderInput,
+  CreateOrderInput,
+  UpdateOrderStatusInput,
+  ListOrdersQuery,
+} from './order.validation';
 import { deductInventoryForOrder } from '../inventory/inventory.service';
 import { createNotification } from '../notifications/notification.service';
 import { getIO } from '../../config/socket';
@@ -36,7 +41,11 @@ function emitOrderEvent(event: string, payload: unknown) {
   }
 }
 
-export async function createOrder(input: CreateOrderInput, userId: string) {
+export async function createOrder(
+  input: CreateOrderInput | CreateGuestOrderInput,
+  userId: string | null,
+  guest?: Pick<CreateGuestOrderInput, 'guestName' | 'guestPhone'>
+) {
   const menuItems = await prisma.menuItem.findMany({
     where: { id: { in: input.items.map((i) => i.menuItemId) } },
   });
@@ -74,8 +83,10 @@ export async function createOrder(input: CreateOrderInput, userId: string) {
       data: {
         orderNumber,
         createdById: userId,
-        orderType: input.orderType,
-        tableOrToken: input.tableOrToken,
+        guestName: guest?.guestName,
+        guestPhone: guest?.guestPhone,
+        orderType: 'orderType' in input ? input.orderType : 'TAKEAWAY',
+        tableOrToken: 'tableOrToken' in input ? input.tableOrToken : undefined,
         subtotal,
         total: subtotal, // tax/discount logic can extend this later
         items: { create: itemsWithPrices },

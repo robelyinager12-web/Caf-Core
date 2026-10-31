@@ -24,8 +24,10 @@ export interface Payment {
 export interface Order {
   id: string;
   orderNumber: string;
-  createdById: string;
-  createdBy: { id: string; fullName: string };
+  createdById: string | null;
+  createdBy: { id: string; fullName: string } | null;
+  guestName?: string | null;
+  guestPhone?: string | null;
   status: OrderStatus;
   orderType: OrderType;
   tableOrToken?: string;
@@ -40,6 +42,12 @@ export interface Order {
 export interface CreateOrderPayload {
   orderType: OrderType;
   tableOrToken?: string;
+  items: { menuItemId: string; quantity: number }[];
+}
+
+export interface GuestPickupOrderPayload {
+  guestName: string;
+  guestPhone: string;
   items: { menuItemId: string; quantity: number }[];
 }
 

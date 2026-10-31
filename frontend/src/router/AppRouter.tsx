@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { MainLayout } from '../layouts/MainLayout';
 import { LoginPage } from '../pages/auth/LoginPage';
+import { CreateAccountPage } from '../pages/auth/CreateAccountPage';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { Loader } from '../components/common/Loader';
 import { DashboardPage } from '../pages/dashboard/DashboardPage';
@@ -46,6 +47,12 @@ const AccountPage = lazy(() =>
 const NotificationsPage = lazy(() =>
   import('../pages/notifications/NotificationsPage').then((m) => ({ default: m.NotificationsPage }))
 );
+const PublicHomePage = lazy(() =>
+  import('../pages/public/PublicHomePage').then((m) => ({ default: m.PublicHomePage }))
+);
+const PrivacyPage = lazy(() =>
+  import('../pages/public/PrivacyPage').then((m) => ({ default: m.PrivacyPage }))
+);
 
 function LazyPage({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<Loader label="Loading page..." />}>{children}</Suspense>;
@@ -55,9 +62,33 @@ export function AppRouter() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
+        <Route
+          path="/"
+          element={
+            <LazyPage>
+              <PublicHomePage />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/menu"
+          element={
+            <LazyPage>
+              <PublicHomePage />
+            </LazyPage>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <LazyPage>
+              <PrivacyPage />
+            </LazyPage>
+          }
+        />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<Navigate to="/login" replace />} />
+          <Route path="/signup" element={<CreateAccountPage />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
@@ -198,10 +229,7 @@ export function AppRouter() {
             pre-restructure URLs still resolves correctly. */}
         <Route path="/items" element={<Navigate to="/menu/items" replace />} />
         <Route path="/items/categories" element={<Navigate to="/menu/categories" replace />} />
-        <Route path="/menu" element={<Navigate to="/orders/new" replace />} />
-
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

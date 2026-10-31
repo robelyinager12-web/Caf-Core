@@ -8,6 +8,9 @@ Administrators create accounts and assign roles in **User Accounts**. Public sel
 ## Managing Food Items (Admin)
 Only an Admin can add, edit, hide, or delete menu items and categories. Open **Menu → Menu Items** and choose **Add Item**. Managers, Cashiers, and Kitchen staff can view the menu but cannot change it.
 
+## Public Menu and Pickup Orders
+Customers can open the public home page without signing in, browse every available menu item, and place a pickup order with their name and phone number. Orders are sent to the kitchen for staff processing. Customers pay in person when collecting the order; the public checkout does not take online payments.
+
 ## Clocking In/Out
 Click **Clock In** in the top-right corner when your shift starts. It turns into a green **On Shift** button — click it again to clock out at the end of your shift.
 

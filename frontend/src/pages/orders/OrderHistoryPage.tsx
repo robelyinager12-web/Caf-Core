@@ -87,6 +87,7 @@ export function OrderHistoryPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Order #</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">Customer</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Items</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">Total</th>
@@ -99,6 +100,16 @@ export function OrderHistoryPage() {
               {(historyQuery.data ?? []).map((order) => (
                 <tr key={order.id}>
                   <td className="px-4 py-3 font-medium text-gray-900">{order.orderNumber}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {order.guestName ? (
+                      <>
+                        <span className="block font-medium text-gray-800">{order.guestName}</span>
+                        <span className="text-xs text-gray-500">{order.guestPhone}</span>
+                      </>
+                    ) : (
+                      order.createdBy?.fullName ?? '—'
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{formatDate(order.createdAt)}</td>
                   <td className="px-4 py-3 text-gray-600">
                     {order.items.map((i) => `${i.quantity}x ${i.menuItem.name}`).join(', ')}

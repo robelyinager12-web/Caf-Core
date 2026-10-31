@@ -23,6 +23,7 @@ import paymentRoutes from './modules/payments/payment.routes';
 import staffRoutes from './modules/staff/staff.routes';
 import reportRoutes from './modules/reports/report.routes';
 import auditRoutes from './modules/audit/audit.routes';
+import publicRoutes from './modules/public/public.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -85,6 +86,7 @@ export function createApp(): Application {
   });
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/public', publicRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/categories', categoryRoutes);
   app.use('/api/menu', menuRoutes);

@@ -22,3 +22,14 @@ export const authRateLimiter = rateLimit({
     message: 'Too many login attempts, please try again later',
   },
 });
+
+export const publicOrderRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many pickup orders from this connection. Please try again later.',
+  },
+});

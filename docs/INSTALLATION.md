@@ -41,7 +41,7 @@ Edit `.env`:
 
 ```bash
 npm install
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 npm run prisma:seed
 npm run dev
 ```

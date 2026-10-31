@@ -136,7 +136,9 @@ model Recipe {
 model Order {
   id            String      @id @default(uuid())
   orderNumber   String      @unique @map("order_number") @db.VarChar(20)
-  createdById   String      @map("created_by")
+  createdById   String?     @map("created_by")
+  guestName     String?     @map("guest_name") @db.VarChar(150)
+  guestPhone    String?     @map("guest_phone") @db.VarChar(30)
   status        OrderStatus @default(PENDING)
   orderType     OrderType   @default(TAKEAWAY) @map("order_type")
   tableOrToken  String?     @map("table_or_token") @db.VarChar(20)
@@ -145,7 +147,7 @@ model Order {
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
 
-  createdBy     User        @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  createdBy     User?       @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   items         OrderItem[]
   payment       Payment?
 

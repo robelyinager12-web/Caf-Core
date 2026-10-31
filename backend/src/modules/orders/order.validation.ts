@@ -14,6 +14,21 @@ export const createOrderSchema = z.object({
     .max(50, 'Order cannot contain more than 50 distinct line items'),
 });
 
+export const createGuestOrderSchema = z.object({
+  guestName: z.string().trim().min(2).max(150),
+  guestPhone: z
+    .string()
+    .trim()
+    .min(7)
+    .max(30)
+    .regex(/^[+()\d.\-\s]+$/, 'Enter a valid phone number')
+    .refine((phone) => phone.replace(/\D/g, '').length >= 7, 'Enter a valid phone number'),
+  items: z
+    .array(orderItemSchema)
+    .min(1, 'Order must contain at least one item')
+    .max(50, 'Order cannot contain more than 50 distinct line items'),
+});
+
 export const updateOrderStatusSchema = z.object({
   status: z.enum(['PENDING', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED']),
 });
@@ -31,5 +46,6 @@ export const listOrdersQuerySchema = z.object({
 });
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type CreateGuestOrderInput = z.infer<typeof createGuestOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
 export type ListOrdersQuery = z.infer<typeof listOrdersQuerySchema>;

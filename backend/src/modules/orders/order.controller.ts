@@ -1,6 +1,7 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import {
   createOrderSchema,
+  createGuestOrderSchema,
   updateOrderStatusSchema,
   listOrdersQuerySchema,
 } from './order.validation';
@@ -23,6 +24,23 @@ export async function postOrder(req: AuthenticatedRequest, res: Response, next: 
     const order = await createOrder(input, req.user.userId);
 
     sendSuccess(res, 201, { message: 'Order created successfully', data: order });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function postGuestOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    const input = createGuestOrderSchema.parse(req.body);
+    const order = await createOrder(input, null, {
+      guestName: input.guestName,
+      guestPhone: input.guestPhone,
+    });
+
+    sendSuccess(res, 201, {
+      message: 'Pickup order received. Please pay when you collect it.',
+      data: order,
+    });
   } catch (error) {
     next(error);
   }

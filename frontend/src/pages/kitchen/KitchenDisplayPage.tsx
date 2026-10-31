@@ -263,7 +263,9 @@ export function KitchenDisplayPage() {
       result = result.filter(
         (o) =>
           o.orderNumber.toLowerCase().includes(q) ||
-          (o.tableOrToken ?? '').toLowerCase().includes(q)
+          (o.tableOrToken ?? '').toLowerCase().includes(q) ||
+          (o.guestName ?? '').toLowerCase().includes(q) ||
+          (o.guestPhone ?? '').toLowerCase().includes(q)
       );
     }
 
@@ -324,7 +326,7 @@ export function KitchenDisplayPage() {
           <thead>
             <tr className="border-b border-gray-100 text-left text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
               <th className="px-4 py-3 font-medium">Order ID</th>
-              <th className="px-4 py-3 font-medium">Table No</th>
+              <th className="px-4 py-3 font-medium">Pickup / table</th>
               <th className="px-4 py-3 font-medium">Amount</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">
@@ -353,7 +355,12 @@ export function KitchenDisplayPage() {
                     {shortOrderLabel(order.orderNumber)}
                   </td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
-                    {order.orderType === 'DINE_IN' ? order.tableOrToken ?? '—' : 'Takeaway'}
+                    {order.guestName ? (
+                      <div>
+                        <p className="font-medium text-gray-800 dark:text-gray-200">{order.guestName}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{order.guestPhone}</p>
+                      </div>
+                    ) : order.orderType === 'DINE_IN' ? order.tableOrToken ?? '—' : 'Staff takeaway'}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
                     {formatCurrency(order.total)}

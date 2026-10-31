@@ -41,6 +41,7 @@ Errors:
 ## Categories & Menu
 | Method | Path | Access | Description |
 |---|---|---|---|
+| GET | `/public/menu` | Public | Paginated list of available menu items for the storefront |
 | GET | `/categories` | Any authenticated | List categories |
 | POST | `/categories` | Admin | Create category |
 | PATCH `/DELETE` | `/categories/:id` | Admin | Update/delete (blocked if items exist) |
@@ -64,6 +65,7 @@ Errors:
 ## Orders
 | Method | Path | Access | Description |
 |---|---|---|---|
+| POST | `/public/orders` | Public (rate limited) | Create a pickup order with customer name and phone; payment is collected at pickup |
 | POST | `/orders` | Admin, Manager, Cashier | Create an order (max 50 line items, max 50 qty each) |
 | GET | `/orders` | Admin, Manager, Cashier, Kitchen | List orders, filter by status/type/date |
 | GET | `/orders/history` | Admin, Manager | Past orders (defaults to COMPLETED) |
