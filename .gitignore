@@ -14,3 +14,4 @@ node_modules/
 
 # Runtime uploaded files
 backend/uploads/
+.neon

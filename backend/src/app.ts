@@ -78,6 +78,14 @@ export function createApp(): Application {
     })
   );
 
+  app.get('/', (_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: 'Caf-Core API is running',
+      health: '/health',
+    });
+  });
+
   app.get('/health', (_req, res) => {
     res.status(200).json({
       status: 'ok',

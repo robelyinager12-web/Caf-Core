@@ -13,22 +13,25 @@ docker-compose -f docker-compose.prod.yml exec backend npm run prisma:seed  # fi
 
 Set production environment variables via a `.env` file alongside `docker-compose.prod.yml` — never commit real secrets.
 
-## Option B — Render / Railway (free tier PaaS)
+## Option B — Vercel frontend + Render backend
 
-1. Push your repo to GitHub.
-2. Create a PostgreSQL instance on Render/Railway; copy its connection string into `DATABASE_URL`.
-3. Create a Web Service with root directory `backend`, build command `npm install && npx prisma generate && npm run build`, and start command `npm start`. Deploy the latest application commit so the generated `dist/` output includes all current API routes.
-4. Set all `backend/.env.example` variables in the platform's environment variable settings — especially strong, unique `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`.
-5. Deploy the frontend as a Static Site (root directory `frontend`, build command `npm run build`, publish directory `dist`). Set `VITE_API_BASE_URL` to `https://<backend-service>.onrender.com/api` and `VITE_SOCKET_URL` to `https://<backend-service>.onrender.com` in the Static Site's environment settings. Vite embeds these values at build time, so redeploy the Static Site after changing either value.
-6. Update the backend's `CLIENT_URL` to match your deployed frontend's URL (required for CORS and the Socket.IO handshake to succeed).
+1. Link the repository to your Neon project and production branch with the Neon CLI, then run `neon deploy`. `DATABASE_URL` is the pooled URL for app queries; `DATABASE_URL_UNPOOLED` is the direct URL for Prisma migrations. Locally, `neon env pull` writes to the root `.env.local`, which the backend loads.
+2. Push the repository to GitHub and import it into Vercel with the project **Root Directory** set to `frontend`. This establishes the production Vercel origin. Use `npm run build` as the build command and `dist` as the output directory.
+3. In Render, create a Blueprint from the repository using the root `render.yaml`. The service builds from `backend`, runs `prisma migrate deploy` each time the service starts, and serves `/health`. Set `DATABASE_URL` to Neon’s pooled URL and `DATABASE_URL_UNPOOLED` to its direct URL, plus `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, and `CLIENT_URL`. Use separate, strong random values for the JWT secrets; `CLIENT_URL` must be the exact Vercel production origin, without a trailing slash. The Render API URL is shown on the service page.
+4. In Vercel, add these environment variables for the Production environment:
+   - `VITE_API_BASE_URL=https://<render-service>.onrender.com/api`
+   - `VITE_SOCKET_URL=https://<render-service>.onrender.com`
+5. Deploy or redeploy Vercel after setting the API URLs. Vite embeds these values at build time, so redeploy Vercel after changing either URL.
+
+The Render Blueprint uses a free web-service plan, which may sleep when idle. Its filesystem is ephemeral, so uploaded menu images can be lost when the service restarts or redeploys. Use durable object storage for uploads, or configure a Render persistent disk on a plan that supports disks and set `UPLOAD_DIR` to its mount path. Vercel preview URLs are not automatically allowed by the backend's single-origin `CLIENT_URL`; configure an appropriate origin before using previews.
 
 ## Post-Deployment Checklist
 
-- [ ] Run migrations: `npx prisma migrate deploy` (not `migrate dev`, which prompts interactively)
+- [ ] Confirm migrations completed in the Render startup logs (use `npm run prisma:migrate:deploy`, not `migrate dev`, for production)
 - [ ] Seed only on first deploy — re-running the seed script is idempotent (`upsert`) but unnecessary after initial setup
 - [ ] Confirm `GET /health` responds `200`
 - [ ] Confirm `GET /api/public/menu?page=1&limit=100` responds `200`; if `/health` works but this endpoint returns `404`, deploy the latest backend commit and verify the service root directory/build command
-- [ ] Verify the deployed frontend's API base URL matches the backend service URL configured above, then redeploy the Static Site
+- [ ] Verify the deployed frontend's API base URL matches the backend service URL configured above, then redeploy Vercel if changed
 - [ ] Confirm CORS: log in from the deployed frontend and verify no CORS errors in the browser console
 - [ ] Confirm Socket.IO connects (check Kitchen Display for real-time order updates)
 - [ ] Change the seeded admin password / create a new admin and deactivate the seeded one
