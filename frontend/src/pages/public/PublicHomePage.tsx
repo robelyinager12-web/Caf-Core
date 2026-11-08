@@ -27,10 +27,7 @@ import { CartLine, Order } from '../../types/order.types';
 import { MenuItem } from '../../types/menu.types';
 import { formatCurrency } from '../../utils/formatCurrency';
 import { getErrorMessage } from '../../utils/validators';
-
-const API_ORIGIN =
-  import.meta.env.VITE_SOCKET_URL ??
-  (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+import { API_ORIGIN } from '../../config/serviceUrls';
 
 function getImageUrl(imageUrl?: string | null) {
   return imageUrl ? `${API_ORIGIN}${imageUrl}` : undefined;

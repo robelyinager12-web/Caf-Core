@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Plus, Download, Search, ImageOff, Pencil, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers } from 'lucide-react';
+import { API_ORIGIN } from '../../config/serviceUrls';
 import { MenuItemForm } from '../../components/menu/MenuItemForm';
 import { Modal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
@@ -254,7 +255,7 @@ export function ItemsManagementPage() {
                       <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                         {item.imageUrl ? (
                           <img
-                            src={`${import.meta.env.VITE_SOCKET_URL}${item.imageUrl}`}
+                            src={`${API_ORIGIN}${item.imageUrl}`}
                             alt={item.name}
                             loading="lazy"
                             className="h-full w-full object-cover"

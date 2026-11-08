@@ -1,5 +1,6 @@
 import { Pencil, Trash2, ImageOff } from 'lucide-react';
 import clsx from 'clsx';
+import { API_ORIGIN } from '../../config/serviceUrls';
 import { MenuItem } from '../../types/menu.types';
 import { formatCurrency } from '../../utils/formatCurrency';
 
@@ -23,7 +24,7 @@ export function MenuItemCard({
       <div className="flex h-32 items-center justify-center bg-gray-100">
         {item.imageUrl ? (
           <img
-            src={`${import.meta.env.VITE_SOCKET_URL}${item.imageUrl}`}
+            src={`${API_ORIGIN}${item.imageUrl}`}
             alt={item.name}
             loading="lazy"
             decoding="async"

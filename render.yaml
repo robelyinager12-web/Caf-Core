@@ -19,7 +19,7 @@ services:
       - key: JWT_REFRESH_SECRET
         sync: false
       - key: CLIENT_URL
-        sync: false
+        value: https://caf-core-wmyp.vercel.app
       - key: JWT_ACCESS_EXPIRES_IN
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN

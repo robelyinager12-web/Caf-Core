@@ -1,8 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { API_ORIGIN } from '../config/serviceUrls';
 import { useAuthStore } from '../store/authStore';
-
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:5000';
 
 export function useSocket(events: Record<string, (payload: any) => void>) {
   const accessToken = useAuthStore((state) => state.accessToken);
@@ -13,7 +12,7 @@ export function useSocket(events: Record<string, (payload: any) => void>) {
   useEffect(() => {
     if (!accessToken) return;
 
-    const socket = io(SOCKET_URL, {
+    const socket = io(API_ORIGIN, {
       auth: { token: accessToken },
     });
     socketRef.current = socket;

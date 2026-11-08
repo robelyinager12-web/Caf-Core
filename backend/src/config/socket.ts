@@ -2,6 +2,7 @@ import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { env } from './env';
+import { allowedOrigins } from './webOrigins';
 import { logger } from '../utils/logger';
 import { Role } from '@prisma/client';
 
@@ -10,7 +11,7 @@ let io: SocketIOServer | null = null;
 export function initSocket(httpServer: HttpServer): SocketIOServer {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: env.clientUrl,
+      origin: allowedOrigins,
       credentials: true,
     },
   });

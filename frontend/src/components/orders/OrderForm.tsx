@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, Minus, Trash2, Search, ImageOff } from 'lucide-react';
 import { CategoryCardGrid } from './CategoryCardGrid';
 import { Button } from '../common/Button';
+import { API_ORIGIN } from '../../config/serviceUrls';
 import { Category, MenuItem } from '../../types/menu.types';
 import { CartLine, OrderType } from '../../types/order.types';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -19,7 +20,7 @@ interface OrderFormProps {
 
 function cartImageSrc(imageUrl?: string): string | undefined {
   if (!imageUrl) return undefined;
-  return `${import.meta.env.VITE_SOCKET_URL}${imageUrl}`;
+  return `${API_ORIGIN}${imageUrl}`;
 }
 
 export function OrderForm({ categories, menuItems, onSubmit, isSubmitting }: OrderFormProps) {

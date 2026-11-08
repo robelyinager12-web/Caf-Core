@@ -6,6 +6,7 @@ import compression from 'compression';
 import path from 'path';
 
 import { env } from './config/env';
+import { allowedOrigins } from './config/webOrigins';
 import { errorHandler } from './middlewares/errorHandler';
 import { globalRateLimiter } from './middlewares/rateLimiter';
 import { sanitizeInput } from './middlewares/sanitizeInput';
@@ -29,11 +30,6 @@ export function createApp(): Application {
   const app = express();
 
   app.set('trust proxy', 1);
-
-  const allowedOrigins = [
-    'http://localhost:5173',
-    env.clientUrl.replace(/\/$/, ''),
-  ];
 
   app.use(
     cors({

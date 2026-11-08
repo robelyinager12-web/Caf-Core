@@ -29,7 +29,11 @@ export const env = {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
 
-  clientUrl: process.env.CLIENT_URL ?? 'http://localhost:5173',
+  clientUrl:
+    process.env.CLIENT_URL ??
+    (process.env.NODE_ENV === 'production'
+      ? 'https://caf-core-wmyp.vercel.app'
+      : 'http://localhost:5173'),
 
   rateLimit: {
     windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 900000),
