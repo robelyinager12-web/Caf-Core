@@ -21,7 +21,7 @@ Set production environment variables via a `.env` file alongside `docker-compose
 4. In Vercel, add these environment variables for the Production environment:
    - `VITE_API_BASE_URL=https://caf-core.onrender.com/api`
    - `VITE_SOCKET_URL=https://caf-core.onrender.com`
-   Production builds also default to these URLs if the Vercel environment variables are unset.
+   The frontend adds `/api` if the configured API URL omits it. Production builds default to these URLs if the Vercel variables are unset.
 5. Deploy or redeploy Vercel after setting the API URLs. Vite embeds these values at build time, so redeploy Vercel after changing either URL.
 
 The Render Blueprint uses a free web-service plan, which may sleep when idle. Its filesystem is ephemeral, so uploaded menu images can be lost when the service restarts or redeploys. Use durable object storage for uploads, or configure a Render persistent disk on a plan that supports disks and set `UPLOAD_DIR` to its mount path. Vercel preview URLs are not automatically allowed by the backend's single-origin `CLIENT_URL`; configure an appropriate origin before using previews.
