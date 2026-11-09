@@ -21,12 +21,26 @@ prisma.$on('error' as never, (e: any) => {
 });
 
 export async function connectDatabase(): Promise<void> {
-  try {
-    await prisma.$connect();
-    logger.info('Database connection established');
-  } catch (error) {
-    logger.error('Failed to connect to database', { error });
-    process.exit(1);
+  const maxAttempts = 6;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      await prisma.$connect();
+      logger.info('Database connection established');
+      return;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        logger.error('Failed to connect to database after retries', { error });
+        process.exit(1);
+      }
+
+      const delayMs = 1000 * 2 ** (attempt - 1);
+      logger.warn(
+        `Database connection attempt ${attempt}/${maxAttempts} failed; retrying in ${delayMs}ms`,
+        { error }
+      );
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
   }
 }
 
