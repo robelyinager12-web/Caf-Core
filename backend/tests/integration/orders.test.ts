@@ -114,6 +114,20 @@ describe('Orders Module — Inventory Deduction Integration', () => {
     expect(res.status).toBe(422);
   });
 
+  it('assigns unique order numbers to simultaneous orders', async () => {
+    const responses = await Promise.all(
+      Array.from({ length: 3 }, () =>
+        request(app)
+          .post('/api/orders')
+          .set('Authorization', `Bearer ${cashierToken}`)
+          .send({ orderType: 'TAKEAWAY', items: [{ menuItemId, quantity: 1 }] })
+      )
+    );
+
+    expect(responses.map((response) => response.status)).toEqual([201, 201, 201]);
+    expect(new Set(responses.map((response) => response.body.data.orderNumber)).size).toBe(3);
+  });
+
   it('rejects creating an order for an unavailable menu item', async () => {
     await prisma.menuItem.update({ where: { id: menuItemId }, data: { isAvailable: false } });
 

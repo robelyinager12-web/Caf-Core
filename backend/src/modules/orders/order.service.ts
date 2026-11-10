@@ -20,16 +20,24 @@ const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 };
 
 async function generateOrderNumber(tx: Prisma.TransactionClient): Promise<string> {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
-  const countToday = await tx.order.count({
-    where: { createdAt: { gte: todayStart } },
-  });
-
   const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const sequence = String(countToday + 1).padStart(4, '0');
-  return `ORD-${datePart}-${sequence}`;
+  const datePrefix = `ORD-${datePart}`;
+  const [{ nextSequence }] = await tx.$queryRaw<Array<{ nextSequence: number }>>`
+    WITH order_number_lock AS (
+      SELECT pg_advisory_xact_lock(74392106)
+    )
+    SELECT COALESCE(
+      MAX(SUBSTRING(o.order_number FROM ${datePrefix.length + 2}::INTEGER)::INTEGER),
+      0
+    ) + 1
+      AS "nextSequence"
+    FROM order_number_lock
+    LEFT JOIN orders AS o
+      ON o.order_number LIKE ${`${datePrefix}-%`}
+      AND SUBSTRING(o.order_number FROM ${datePrefix.length + 2}::INTEGER) ~ '^[0-9]+$'
+  `;
+
+  return `${datePrefix}-${String(nextSequence).padStart(4, '0')}`;
 }
 
 function emitOrderEvent(event: string, payload: unknown) {
