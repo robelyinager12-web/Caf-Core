@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+const positiveIntegerQuery = (fallback: number, max = Number.MAX_SAFE_INTEGER) =>
+  z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(max))
+    .optional()
+    .transform((value) => value ?? fallback)
+    .catch(fallback);
+
 export const createMenuItemSchema = z.object({
   categoryId: z.string().uuid('Invalid category ID'),
   name: z.string().min(2).max(150),
@@ -23,11 +33,8 @@ export const listMenuItemsQuerySchema = z.object({
     .optional()
     .transform((val) => (val === undefined ? undefined : val === 'true')),
   search: z.string().max(150).optional(),
-  page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),
-  limit: z
-    .string()
-    .optional()
-    .transform((val) => Math.min(val ? parseInt(val, 10) : 20, 100)),
+  page: positiveIntegerQuery(1, 1_000_000),
+  limit: positiveIntegerQuery(20).transform((value) => Math.min(value, 100)),
 });
 
 export type CreateMenuItemInput = z.infer<typeof createMenuItemSchema>;

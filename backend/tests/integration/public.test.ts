@@ -57,15 +57,23 @@ describe('Public café storefront', () => {
   });
 
   it('lists available menu items publicly but hides unavailable items', async () => {
-    const response = await request(app).get('/api/public/menu?limit=100');
+    const response = await request(app).get('/api/public/menu?page=1&limit=100');
 
     expect(response.status).toBe(200);
+    expect(response.body.meta).toMatchObject({ page: 1, limit: 100 });
     expect(response.body.data.some((item: { id: string }) => item.id === availableMenuItemId)).toBe(
       true
     );
     expect(
       response.body.data.some((item: { id: string }) => item.id === unavailableMenuItemId)
     ).toBe(false);
+  });
+
+  it('uses safe defaults for invalid pagination query values', async () => {
+    const response = await request(app).get('/api/public/menu?page=invalid&limit=-10');
+
+    expect(response.status).toBe(200);
+    expect(response.body.meta).toMatchObject({ page: 1, limit: 20 });
   });
 
   it('creates a guest pickup order with server-calculated prices for staff processing', async () => {

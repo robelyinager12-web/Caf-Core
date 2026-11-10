@@ -1,9 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { sendSuccess } from '../../utils/apiResponse';
+import { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { sendError, sendSuccess } from '../../utils/apiResponse';
 import { listMenuItems } from '../menu/menu.service';
 import { listMenuItemsQuerySchema } from '../menu/menu.validation';
 
-export async function getPublicMenu(req: Request, res: Response, next: NextFunction) {
+export async function getPublicMenu(req: Request, res: Response): Promise<void> {
   try {
     const query = listMenuItemsQuerySchema.parse(req.query);
     const result = await listMenuItems({ ...query, isAvailable: true });
@@ -14,6 +15,12 @@ export async function getPublicMenu(req: Request, res: Response, next: NextFunct
       meta: result.pagination,
     });
   } catch (error) {
-    next(error);
+    if (error instanceof ZodError) {
+      sendError(res, 422, 'Validation failed', error.flatten().fieldErrors);
+      return;
+    }
+
+    console.error('Failed to retrieve public menu:', error);
+    sendError(res, 500, 'Failed to retrieve public menu');
   }
 }

@@ -7,7 +7,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
-    "dev": "nodemon --exec ts-node src/server.ts",
+    "dev": "prisma migrate deploy && nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",

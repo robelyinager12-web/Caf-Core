@@ -14,7 +14,7 @@ See [docs/INSTALLATION.md](docs/INSTALLATION.md) for full setup instructions.
 cd backend
 cp .env.example .env   # fill in your database credentials
 npm install
-npx prisma migrate dev --name init
+npm run prisma:migrate:deploy
 npm run prisma:seed
 npm run dev
 
