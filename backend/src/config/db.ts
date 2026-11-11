@@ -17,6 +17,17 @@ prisma.$on('query' as never, (e: any) => {
 });
 
 prisma.$on('error' as never, (e: any) => {
+  if (
+    e.message.includes('E57P01') ||
+    e.message.includes('terminating connection due to administrator command')
+  ) {
+    logger.warn(
+      'Neon terminated an idle database connection during compute suspension or restart',
+      { timestamp: e.timestamp, target: e.target }
+    );
+    return;
+  }
+
   logger.error('Prisma error', { error: e });
 });
 
