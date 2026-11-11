@@ -7,7 +7,7 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
-    "dev": "prisma migrate deploy && nodemon --exec ts-node src/server.ts",
+    "dev": "npm run prisma:migrate:deploy && nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
@@ -15,7 +15,7 @@
     "test": "jest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:deploy": "node scripts/migrate-with-retry.js",
     "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
