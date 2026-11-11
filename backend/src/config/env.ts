@@ -40,9 +40,15 @@ export const env = {
     maxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS ?? 200),
   },
 
-  upload: {
+   upload: {
     dir: process.env.UPLOAD_DIR ?? 'uploads/menu-images',
     maxSizeMb: Number(process.env.MAX_UPLOAD_SIZE_MB ?? 5),
+  },
+
+  cloudinary: {
+    cloudName: requireEnv('CLOUDINARY_CLOUD_NAME'),
+    apiKey: requireEnv('CLOUDINARY_API_KEY'),
+    apiSecret: requireEnv('CLOUDINARY_API_SECRET'),
   },
 
   isProduction: process.env.NODE_ENV === 'production',

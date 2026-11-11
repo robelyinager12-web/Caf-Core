@@ -84,27 +84,30 @@ export async function createOrder(
     0
   );
 
-  const order = await prisma.$transaction(async (tx) => {
-    const orderNumber = await generateOrderNumber(tx);
+  const order = await prisma.$transaction(
+    async (tx) => {
+      const orderNumber = await generateOrderNumber(tx);
 
-    return tx.order.create({
-      data: {
-        orderNumber,
-        createdById: userId,
-        guestName: guest?.guestName,
-        guestPhone: guest?.guestPhone,
-        orderType: 'orderType' in input ? input.orderType : 'TAKEAWAY',
-        tableOrToken: 'tableOrToken' in input ? input.tableOrToken : undefined,
-        subtotal,
-        total: subtotal, // tax/discount logic can extend this later
-        items: { create: itemsWithPrices },
-      },
-      include: {
-        items: { include: { menuItem: { select: { id: true, name: true } } } },
-        createdBy: { select: { id: true, fullName: true } },
-      },
-    });
-  });
+      return tx.order.create({
+        data: {
+          orderNumber,
+          createdById: userId,
+          guestName: guest?.guestName,
+          guestPhone: guest?.guestPhone,
+          orderType: 'orderType' in input ? input.orderType : 'TAKEAWAY',
+          tableOrToken: 'tableOrToken' in input ? input.tableOrToken : undefined,
+          subtotal,
+          total: subtotal, // tax/discount logic can extend this later
+          items: { create: itemsWithPrices },
+        },
+        include: {
+          items: { include: { menuItem: { select: { id: true, name: true } } } },
+          createdBy: { select: { id: true, fullName: true } },
+        },
+      });
+    },
+    { timeout: 15000 }
+  );
 
   // Broadcast to everyone (targetRole omitted = null = all roles) rather
   // than Kitchen only — Cashiers and Admins/Managers placing or nearby
