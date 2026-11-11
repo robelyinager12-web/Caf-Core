@@ -1,9 +1,48 @@
 const { spawn } = require('node:child_process');
 const path = require('node:path');
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
-const maxAttempts = 6;
-const retryDelaysMs = [1000, 2000, 4000, 8000, 15000];
+const retryDelaysMs = [1000, 2000, 4000, 8000, 15000, 20000, 20000, 20000, 20000];
+const maxAttempts = retryDelaysMs.length + 1;
 const prismaCli = require.resolve('prisma');
+
+function getMigrationEnvironment() {
+  if (process.env.DATABASE_URL_UNPOOLED) {
+    return process.env;
+  }
+
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL must be configured before running migrations.');
+  }
+
+  let directUrl;
+  try {
+    directUrl = new URL(databaseUrl);
+  } catch {
+    throw new Error('DATABASE_URL must be a valid PostgreSQL connection URL.');
+  }
+
+  if (!['postgres:', 'postgresql:'].includes(directUrl.protocol)) {
+    throw new Error('DATABASE_URL must use the PostgreSQL protocol.');
+  }
+
+  if (directUrl.hostname.includes('-pooler')) {
+    directUrl.hostname = directUrl.hostname.replace('-pooler', '');
+    console.warn(
+      'DATABASE_URL_UNPOOLED is not set; using the direct Neon endpoint derived from DATABASE_URL for migrations.'
+    );
+  } else {
+    console.warn(
+      'DATABASE_URL_UNPOOLED is not set; using DATABASE_URL as the direct migration URL.'
+    );
+  }
+
+  return {
+    ...process.env,
+    DATABASE_URL_UNPOOLED: directUrl.toString(),
+  };
+}
 
 function deployMigrations() {
   return new Promise((resolve, reject) => {
@@ -12,7 +51,7 @@ function deployMigrations() {
       [prismaCli, 'migrate', 'deploy'],
       {
         cwd: path.resolve(__dirname, '..'),
-        env: process.env,
+        env: getMigrationEnvironment(),
         stdio: ['inherit', 'pipe', 'pipe'],
       }
     );
@@ -52,7 +91,11 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error('Failed to run Prisma migrations:', error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error('Failed to run Prisma migrations:', error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { getMigrationEnvironment };

@@ -32,7 +32,8 @@ prisma.$on('error' as never, (e: any) => {
 });
 
 export async function connectDatabase(): Promise<void> {
-  const maxAttempts = 6;
+  const retryDelaysMs = [1000, 2000, 4000, 8000, 15000, 20000, 20000, 20000, 20000];
+  const maxAttempts = retryDelaysMs.length + 1;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -45,7 +46,7 @@ export async function connectDatabase(): Promise<void> {
         process.exit(1);
       }
 
-      const delayMs = 1000 * 2 ** (attempt - 1);
+      const delayMs = retryDelaysMs[attempt - 1];
       logger.warn(
         `Database connection attempt ${attempt}/${maxAttempts} failed; retrying in ${delayMs}ms`,
         { error }
